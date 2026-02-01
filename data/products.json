@@ -1,0 +1,23 @@
+[
+  {
+    "id": "1",
+    "name": "Produit Exemple 1",
+    "description": "Description détaillée du produit exemple 1. Un produit de qualité supérieure.",
+    "price": 29.99,
+    "image": "/images/product-1.jpg",
+    "category": "Électronique",
+    "stock": 10,
+    "sku": "PROD-001"
+  },
+  {
+    "id": "2",
+    "name": "Produit Exemple 2",
+    "description": "Description détaillée du produit exemple 2. Un produit innovant et moderne.",
+    "price": 49.99,
+    "image": "/images/product-2.jpg",
+    "category": "Mode",
+    "stock": 5,
+    "sku": "PROD-002"
+  }
+]
+

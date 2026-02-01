@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🛒 Site E-Commerce
 
-## Getting Started
+Un site e-commerce moderne construit avec Next.js 16, TypeScript, et Tailwind CSS.
 
-First, run the development server:
+## 🚀 Démarrage rapide
+
+### Installation des dépendances
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Lancer le serveur de développement
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur pour voir le résultat.
 
-## Learn More
+## 📁 Structure du projet
 
-To learn more about Next.js, take a look at the following resources:
+Consultez le fichier [STRUCTURE.md](./STRUCTURE.md) pour une documentation détaillée de l'organisation des dossiers.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Organisation principale
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **`app/`** - Pages Next.js (App Router)
+  - `products/` - Pages produits (liste et détail)
+  - `cart/` - Page panier
+  - `checkout/` - Page checkout
+  - `account/` - Pages compte utilisateur
 
-## Deploy on Vercel
+- **`components/`** - Composants React réutilisables
+  - `ui/` - Composants UI de base
+  - `layout/` - Header, Footer
+  - `product/` - Composants produits
+  - `cart/` - Composants panier
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **`lib/`** - Bibliothèques et utilitaires
+  - `api/` - Appels API
+  - `utils/` - Fonctions utilitaires
+  - `validations/` - Schémas de validation (Zod)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **`hooks/`** - Hooks React personnalisés
+- **`contexts/`** - Contextes React (CartContext, etc.)
+- **`types/`** - Types TypeScript
+- **`config/`** - Configuration et constantes
+
+## ✨ Fonctionnalités
+
+- ✅ Gestion du panier avec localStorage
+- ✅ Pages produits (liste et détail)
+- ✅ Page checkout
+- ✅ Structure modulaire et scalable
+- ✅ TypeScript pour la sécurité des types
+- ✅ Tailwind CSS pour le styling
+
+## 🔧 Technologies utilisées
+
+- **Next.js 16** - Framework React
+- **TypeScript** - Typage statique
+- **Tailwind CSS** - Framework CSS
+- **Zod** - Validation de schémas
+- **React Context** - Gestion d'état
+
+## 📝 Prochaines étapes
+
+1. Implémenter les appels API réels dans `lib/api/`
+2. Ajouter l'authentification utilisateur
+3. Configurer la base de données
+4. Ajouter les tests
+5. Configurer le déploiement
+
+## 📚 Documentation
+
+Pour plus d'informations sur Next.js, consultez :
+- [Documentation Next.js](https://nextjs.org/docs)
+- [Apprendre Next.js](https://nextjs.org/learn)
+
+## 🚀 Déploiement
+
+Le moyen le plus simple de déployer votre application Next.js est d'utiliser [Vercel](https://vercel.com/new).

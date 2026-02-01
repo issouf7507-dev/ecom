@@ -1,0 +1,18 @@
+
+      <div className="container mx-auto px-4 py-8">
+        <h1>JUST DROPPED</h1>
+
+        {/* products */}
+        <motion.div
+          className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {productsDataww.map((product, index) => (
+            <motion.div key={index} variants={itemVariants as any}>
+              <ProductCard {...product} />
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
