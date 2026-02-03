@@ -1,4 +1,4 @@
-// Composant Header pour la navigation
+// Composant Header pour la navigation - VERSION RESPONSIVE
 
 "use client";
 
@@ -8,14 +8,14 @@ import { useCartContext } from "@/contexts/CartContext";
 import { useCheckout } from "@/hooks/useCheckout";
 import type { CheckoutInput } from "@/lib/api/checkout";
 import React, { useState } from "react";
+import { toast } from "sonner";
 import {
   Menu,
   X,
   User,
   Package,
   ChevronDown,
-  Check,
-  Search,
+
   ShoppingCart,
   Plus,
   Minus,
@@ -33,27 +33,16 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
+import { useRouter } from "next/navigation";
+import {
+  storeOrderSuccess,
+  buildWhatsAppOrderMessage,
+} from "@/lib/utils/orderSuccess";
 
 const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "";
 
-function buildWhatsAppOrderMessage(
-  cartItems: { product: { name: string; price: number }; quantity: number }[],
-  total: number
-): string {
-  const lines = [
-    "🛒 *Nouvelle commande - Kik Game*",
-    "",
-    ...cartItems.map(
-      (item) =>
-        `• ${item.product.name} x ${item.quantity} - £${(item.product.price * item.quantity).toFixed(2)}`
-    ),
-    "",
-    `*Total : £${total.toFixed(2)}*`,
-  ];
-  return lines.join("\n");
-}
-
 export function Header() {
+  const router = useRouter();
   const {
     items: cartItems,
     itemCount,
@@ -63,11 +52,13 @@ export function Header() {
     clearCart,
   } = useCartContext();
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const checkoutMutation = useCheckout();
   const isSubmitting = checkoutMutation.isPending;
+
   const marqueeItems = [
     { label: "Guaranteed Authenticity", href: "/collections/accessories" },
     { label: "Next Day Shipping On Select Sizes", href: "/collections" },
@@ -91,8 +82,6 @@ export function Header() {
       name: "Nouveautés",
       href: "/collections/new-arrivals",
     },
-
-
     {
       id: "pre-orders",
       name: "Précommandes",
@@ -103,7 +92,6 @@ export function Header() {
       name: "Accessoires",
       href: "/accessories",
     },
-
   ];
 
   const utilityLinks = [
@@ -119,37 +107,57 @@ export function Header() {
     },
   ];
 
-  // Simplified list for the dropdown example
-  const countryOptions = [
-    {
-      code: "GB",
-      name: "GBP",
-      currency: "£",
-      isCurrent: true,
-      flagUrl: "//cdn.shopify.com/static/images/flags/gb.svg?width=32",
-    },
-    {
-      code: "AD",
-      name: "EUR",
-      currency: "€",
-      isCurrent: false,
-      flagUrl: "//cdn.shopify.com/static/images/flags/ad.svg?width=32",
-    },
-    {
-      code: "AU",
-      name: "AUD",
-      currency: "$",
-      isCurrent: false,
-      flagUrl: "//cdn.shopify.com/static/images/flags/au.svg?width=32",
-    },
-  ];
-  const [isOpen, setIsOpen] = useState(false);
-  const [isCountryOpen, setIsCountryOpen] = useState(false);
-  const currentCountry =
-    countryOptions.find((c) => c.isCurrent) || countryOptions[0];
+  const handleValidateOrder = async () => {
+    const raw = whatsappNumber.replace(/\D/g, "").trim();
+    if (!raw || raw.length < 10) {
+      setCheckoutError("Veuillez entrer un numéro WhatsApp valide.");
+      return;
+    }
+    if (!WHATSAPP_NUMBER) {
+      setCheckoutError(
+        "Numéro boutique non configuré. Contactez le support."
+      );
+      return;
+    }
+    setCheckoutError(null);
+    const input: CheckoutInput = {
+      items: cartItems.map((item) => ({
+        productId: item.product.id,
+        quantity: item.quantity,
+      })),
+      whatsappNumber: raw,
+    };
+    try {
+      const result = await checkoutMutation.mutateAsync(input);
+      const orderItems = cartItems.map((item) => ({
+        name: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity,
+      }));
+      storeOrderSuccess({
+        orderNumber: result.orderNumber,
+        total: result.total,
+        items: orderItems,
+      });
+      const text = buildWhatsAppOrderMessage(orderItems, result.total);
+      const url = `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+      clearCart();
+      setIsCheckoutModalOpen(false);
+      setIsCartOpen(false);
+      toast.success("Commande validée");
+      router.push("/checkout/success");
+    } catch (err) {
+      setCheckoutError(
+        err instanceof Error ? err.message : "Erreur lors de la création de la commande."
+      );
+    }
+  };
+
   return (
     <div>
-      <div className="w-full sticky top-0 z-50 bg-black text-white py-2 border-b overflow-hidden orbitron">
+      {/* Marquee Banner */}
+      <div className="w-full sticky top-0 z-50 bg-black text-white py-1.5 sm:py-2 border-b overflow-hidden orbitron">
         <div className="relative flex overflow-hidden">
           {/* Track */}
           <div className="flex whitespace-nowrap animate-marquee hover:paused">
@@ -158,7 +166,7 @@ export function Header() {
                 {marqueeItems.map((item, index) => (
                   <div
                     key={index}
-                    className="flex items-center text-sm lg:text-base mx-6"
+                    className="flex items-center text-xs sm:text-sm lg:text-base mx-3 sm:mx-6"
                   >
                     <a
                       href={item.href}
@@ -168,7 +176,7 @@ export function Header() {
                     >
                       {item.label}
                     </a>
-                    <span className="mx-6">•</span>
+                    <span className="mx-3 sm:mx-6">•</span>
                   </div>
                 ))}
               </React.Fragment>
@@ -177,45 +185,60 @@ export function Header() {
         </div>
       </div>
 
-      <header className="header relative max-xl:gap-x-4 header--top-center header--mobile-center header--has-menu text-gray-900 px-4 py-4 orbitron">
-        {/* desktop menu */}
+      {/* Main Header */}
+      <header className="header relative max-xl:gap-x-4 header--top-center header--mobile-center header--has-menu text-gray-900 px-3 sm:px-4 lg:px-6 py-3 sm:py-4 orbitron">
+        {/* Top Bar with Logo and Icons */}
         <div>
-          <div>
-            <div className="grid grid-cols-2 md:grid-cols-3">
-              <div className=" ">
-                <div className="cursor-pointer">
-                  <User className="size-7" />
-                </div>
-              </div>
-              <div className=" md:text-center">
-                <div>Kik Game</div>
-              </div>
-              <div className="place-items-end">
-                <div className="flex items-center gap-2">
+          <div className="grid grid-cols-3 items-center gap-2 sm:gap-4">
+            {/* Left: Menu Icon (Mobile) / User Icon (Desktop) */}
+            <div className="flex items-center">
+              {/* Mobile Menu Toggle */}
+              <button
+                className="md:hidden cursor-pointer p-1"
+                onClick={() => setIsMobileMenuOpen(true)}
+                aria-label="Ouvrir le menu"
+              >
+                <Menu className="size-6 sm:size-7" />
+              </button>
 
-                  <div
-                    className="relative cursor-pointer"
-                    onClick={() => setIsCartOpen(true)}
-                  >
-                    <ShoppingCart className="size-7" />
-                    {itemCount > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                        {itemCount}
-                      </span>
-                    )}
-                  </div>
-                </div>
+              {/* Desktop User Icon */}
+              <div className="hidden md:block cursor-pointer">
+                <User className="size-6 lg:size-7" />
+              </div>
+            </div>
+
+            {/* Center: Logo */}
+            <div className="text-center">
+              <Link href="/" className="text-base sm:text-lg lg:text-xl font-bold">
+                Kik Game
+              </Link>
+            </div>
+
+            {/* Right: Cart Icon */}
+            <div className="flex items-center justify-end gap-2 sm:gap-3">
+              <div
+                className="relative cursor-pointer p-1"
+                onClick={() => setIsCartOpen(true)}
+              >
+                <ShoppingCart className="size-6 sm:size-7" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-orange-500 text-white text-[10px] sm:text-xs font-bold rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
+                    {itemCount}
+                  </span>
+                )}
               </div>
             </div>
           </div>
-          <div className="flex items-center justify-center">
+
+          {/* Desktop Navigation */}
+          <div className="flex items-center justify-center mt-3 sm:mt-4">
             <nav className="hidden md:block">
-              <ul className="flex gap-4">
+              <ul className="flex gap-3 lg:gap-4 xl:gap-6">
                 {navLinks.map((link) => (
                   <li key={link.id}>
                     <a
                       href={link.href}
-                      className="text-md font-semibold py-4 uppercase hover:text-gray-600 transition-colors"
+                      className="text-xs lg:text-sm xl:text-base font-semibold py-2 uppercase hover:text-gray-600 transition-colors whitespace-nowrap"
                     >
                       {link.name}
                     </a>
@@ -226,7 +249,67 @@ export function Header() {
           </div>
         </div>
 
-        {/* cart drawer */}
+        {/* Mobile Menu Drawer */}
+        {isMobileMenuOpen && (
+          <>
+            {/* Overlay */}
+            <div
+              className="fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 md:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+
+            {/* Drawer */}
+            <div className="fixed top-0 left-0 h-full w-[80%] max-w-sm bg-white z-50 shadow-2xl flex flex-col transform transition-transform duration-300 ease-out md:hidden">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b">
+                <h2 className="text-lg font-bold">Menu</h2>
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  aria-label="Fermer le menu"
+                >
+                  <X className="size-6" />
+                </button>
+              </div>
+
+              {/* Navigation Links */}
+              <nav className="flex-1 overflow-y-auto p-4">
+                <ul className="space-y-1">
+                  {navLinks.map((link) => (
+                    <li key={link.id}>
+                      <a
+                        href={link.href}
+                        className="block px-4 py-3 text-base font-semibold uppercase hover:bg-gray-100 rounded-lg transition-colors"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {link.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+
+              {/* Footer with User Actions */}
+              <div className="border-t p-4 space-y-2">
+                {utilityLinks.map((link, index) => {
+                  const Icon = link.icon;
+                  return (
+                    <a
+                      key={index}
+                      href={link.href}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <Icon className="size-5" />
+                      <span className="text-sm font-medium">{link.name}</span>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Cart Drawer */}
         {isCartOpen && (
           <>
             {/* Overlay */}
@@ -235,29 +318,29 @@ export function Header() {
               onClick={() => setIsCartOpen(false)}
             />
 
-            {/* Drawer */}
-            <div className="fixed top-0 right-0 h-full w-[40%] bg-white z-50 shadow-2xl flex flex-col transform transition-transform duration-300 ease-out">
+            {/* Drawer - Responsive Width */}
+            <div className="fixed top-0 right-0 h-full w-full sm:w-[85%] md:w-[60%] lg:w-[45%] xl:w-[40%] max-w-2xl bg-white z-50 shadow-2xl flex flex-col transform transition-transform duration-300 ease-out">
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b">
-                <h2 className="text-2xl font-bold">Panier</h2>
+              <div className="flex items-center justify-between p-4 sm:p-6 border-b">
+                <h2 className="text-xl sm:text-2xl font-bold">Panier</h2>
                 <button
                   onClick={() => setIsCartOpen(false)}
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                   aria-label="Fermer le panier"
                 >
-                  <X className="size-6" />
+                  <X className="size-5 sm:size-6" />
                 </button>
               </div>
 
               {/* Cart Items */}
-              <div className="flex-1 overflow-y-auto p-6">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6">
                 {cartItems.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-center">
-                    <ShoppingCart className="size-16 text-gray-300 mb-4" />
-                    <p className="text-gray-500 text-lg mb-2">
+                    <ShoppingCart className="size-12 sm:size-16 text-gray-300 mb-4" />
+                    <p className="text-gray-500 text-base sm:text-lg mb-2">
                       Votre panier est vide
                     </p>
-                    <p className="text-gray-400 text-sm">
+                    <p className="text-gray-400 text-xs sm:text-sm">
                       Ajoutez des produits pour commencer
                     </p>
                   </div>
@@ -266,32 +349,32 @@ export function Header() {
                     {cartItems.map((item) => (
                       <div
                         key={item.product.id}
-                        className="flex flex-col md:flex-row gap-4 pb-4 border-b last:border-b-0"
+                        className="flex gap-3 sm:gap-4 pb-4 border-b last:border-b-0"
                       >
                         {/* Product Image */}
-                        <div className=" bg-gray-100 rounded-md">
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
                           <Image
                             src={item.product.image}
                             alt={item.product.name}
                             width={200}
                             height={200}
-                            className="object-cover"
+                            className="object-cover w-full h-full"
                           />
                         </div>
 
                         {/* Product Info */}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-lg mb-4 line-clamp-2 mb10">
+                        <div className="flex-1 min-w-0 flex flex-col">
+                          <h3 className="font-semibold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2 line-clamp-2">
                             {item.product.name}
                           </h3>
-                          <p className="text-gray-600 text-lg mb-6">
+                          <p className="text-gray-600 text-sm sm:text-base mb-2 sm:mb-3">
                             {item.product.price.toFixed(2)} FCFA
                           </p>
 
                           {/* Quantity Controls */}
-                          <div className="flex items-center gap-3">
-                            <div className="border border-gray-300 rounded-lg p-3 inline-block">
-                              <div className="flex items-center gap-10 ">
+                          <div className="flex items-center gap-2 sm:gap-3 mt-auto">
+                            <div className="border border-gray-300 rounded-lg p-1.5 sm:p-2 inline-flex">
+                              <div className="flex items-center gap-3 sm:gap-6">
                                 <button
                                   onClick={() => {
                                     if (item.quantity > 1) {
@@ -303,12 +386,12 @@ export function Header() {
                                       removeFromCart(item.product.id);
                                     }
                                   }}
-                                  className="p-1 hover:bg-gray-100 rounded transition-colors orbitron"
+                                  className="p-1 hover:bg-gray-100 rounded transition-colors"
                                   aria-label="Diminuer la quantité"
                                 >
-                                  <Minus className="size-4" />
+                                  <Minus className="size-3 sm:size-4" />
                                 </button>
-                                <span className="w-8 text-center text-lg font-medium orbitron">
+                                <span className="w-6 sm:w-8 text-center text-sm sm:text-base font-medium">
                                   {item.quantity}
                                 </span>
                                 <button
@@ -324,19 +407,17 @@ export function Header() {
                                   className="p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                   aria-label="Augmenter la quantité"
                                 >
-                                  <Plus className="size-4" />
+                                  <Plus className="size-3 sm:size-4" />
                                 </button>
                               </div>
                             </div>
-                            <div>
-                              <button
-                                onClick={() => removeFromCart(item.product.id)}
-                                className="ml-auto p-1"
-                                aria-label="Supprimer l'article"
-                              >
-                                <Trash2 className="size-9" />
-                              </button>
-                            </div>
+                            <button
+                              onClick={() => removeFromCart(item.product.id)}
+                              className="p-1.5 sm:p-2 hover:bg-red-50 rounded transition-colors"
+                              aria-label="Supprimer l'article"
+                            >
+                              <Trash2 className="size-5 sm:size-6 text-red-600" />
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -347,9 +428,9 @@ export function Header() {
 
               {/* Footer */}
               {cartItems.length > 0 && (
-                <div className="border-t p-6 space-y-4">
+                <div className="border-t p-4 sm:p-6 space-y-3 sm:space-y-4">
                   {/* Total */}
-                  <div className="flex items-center justify-between text-lg font-bold">
+                  <div className="flex items-center justify-between text-base sm:text-lg font-bold">
                     <span>Total</span>
                     <span>£{total.toFixed(2)}</span>
                   </div>
@@ -359,7 +440,7 @@ export function Header() {
                     <Button
                       variant="default"
                       size="lg"
-                      className="w-full"
+                      className="w-full text-sm sm:text-base"
                       onClick={() => setIsCheckoutModalOpen(true)}
                     >
                       Passer la commande
@@ -367,7 +448,7 @@ export function Header() {
                     <Button
                       variant="outline"
                       size="default"
-                      className="w-full"
+                      className="w-full text-sm sm:text-base"
                       onClick={clearCart}
                     >
                       Vider le panier
@@ -390,17 +471,17 @@ export function Header() {
             }
           }}
         >
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md w-[95%] sm:w-full max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Confirmer la commande</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-lg sm:text-xl">Confirmer la commande</DialogTitle>
+              <DialogDescription className="text-xs sm:text-sm">
                 Entrez votre numéro WhatsApp. La commande sera enregistrée et
                 vous pourrez envoyer le détail sur WhatsApp.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
               <div className="space-y-2">
-                <Label htmlFor="whatsapp-number">
+                <Label htmlFor="whatsapp-number" className="text-sm sm:text-base">
                   Numéro WhatsApp <span className="text-destructive">*</span>
                 </Label>
                 <Input
@@ -412,39 +493,39 @@ export function Header() {
                     setWhatsappNumber(e.target.value);
                     setCheckoutError(null);
                   }}
-                  className="w-full"
+                  className="w-full text-sm sm:text-base"
                   disabled={isSubmitting}
                 />
               </div>
-              <div className="rounded-lg border bg-muted/50 p-4 space-y-2 max-h-48 overflow-y-auto">
+              <div className="rounded-lg border bg-muted/50 p-3 sm:p-4 space-y-2 max-h-40 sm:max-h-48 overflow-y-auto">
                 {cartItems.map((item) => (
                   <div
                     key={item.product.id}
-                    className="flex justify-between text-sm"
+                    className="flex justify-between text-xs sm:text-sm gap-2"
                   >
                     <span className="line-clamp-1">
                       {item.product.name} x {item.quantity}
                     </span>
                     <span className="font-medium whitespace-nowrap">
-                      £
-                      {(item.product.price * item.quantity).toFixed(2)}
+                      £{(item.product.price * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 ))}
               </div>
-              <div className="flex justify-between text-base font-bold border-t pt-3">
+              <div className="flex justify-between text-sm sm:text-base font-bold border-t pt-2 sm:pt-3">
                 <span>Total</span>
                 <span>£{total.toFixed(2)}</span>
               </div>
               {checkoutError && (
-                <p className="text-sm text-destructive">{checkoutError}</p>
+                <p className="text-xs sm:text-sm text-destructive">{checkoutError}</p>
               )}
             </div>
-            <DialogFooter className="gap-2 sm:gap-0">
+            <DialogFooter className="gap-2 sm:gap-0 flex-col sm:flex-row">
               <Button
                 variant="outline"
                 onClick={() => setIsCheckoutModalOpen(false)}
                 disabled={isSubmitting}
+                className="w-full sm:w-auto text-sm sm:text-base"
               >
                 Annuler
               </Button>
@@ -454,44 +535,12 @@ export function Header() {
                   !whatsappNumber.trim() ||
                   whatsappNumber.replace(/\D/g, "").length < 10
                 }
-                onClick={async () => {
-                  const raw = whatsappNumber.replace(/\D/g, "").trim();
-                  if (!raw || raw.length < 10) {
-                    setCheckoutError("Veuillez entrer un numéro WhatsApp valide.");
-                    return;
-                  }
-                  if (!WHATSAPP_NUMBER) {
-                    setCheckoutError(
-                      "Numéro boutique non configuré. Contactez le support."
-                    );
-                    return;
-                  }
-                  setCheckoutError(null);
-                  const input: CheckoutInput = {
-                    items: cartItems.map((item) => ({
-                      productId: item.product.id,
-                      quantity: item.quantity,
-                    })),
-                    whatsappNumber: raw,
-                  };
-                  try {
-                    await checkoutMutation.mutateAsync(input);
-                    const text = buildWhatsAppOrderMessage(cartItems, total);
-                    const url = `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
-                    window.open(url, "_blank", "noopener,noreferrer");
-                    clearCart();
-                    setIsCheckoutModalOpen(false);
-                    setIsCartOpen(false);
-                  } catch (err) {
-                    setCheckoutError(
-                      err instanceof Error ? err.message : "Erreur lors de la création de la commande."
-                    );
-                  }
-                }}
+                onClick={handleValidateOrder}
+                className="w-full sm:w-auto text-sm sm:text-base"
               >
                 {isSubmitting
                   ? "Enregistrement..."
-                  : "Valider et envoyer sur WhatsApp"}
+                  : "Valider et envoyer"}
               </Button>
             </DialogFooter>
           </DialogContent>

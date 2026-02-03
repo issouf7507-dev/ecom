@@ -54,20 +54,9 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
   useProducts,
   useDeleteProduct,
   useCreateProduct,
-  useUpdateProduct,
 } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { Status } from "@prisma/client";
@@ -148,25 +137,6 @@ export default function ProductsListPage() {
   );
   const [preOrderFilter, setPreOrderFilter] = useState<boolean | "all">("all");
 
-  // Modal d'édition
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [editFormData, setEditFormData] = useState<{
-    name: string;
-    price: string;
-    stockQuantity: string;
-    status: Status;
-    categoryId: string;
-    description: string;
-  }>({
-    name: "",
-    price: "",
-    stockQuantity: "",
-    status: Status.ACTIVE,
-    categoryId: "",
-    description: "",
-  });
-
   // Build filters
   const filters: ProductFilters = useMemo(() => {
     const f: ProductFilters = {};
@@ -214,7 +184,6 @@ export default function ProductsListPage() {
   const { data: categories = [] } = useCategories();
   const deleteProduct = useDeleteProduct();
   const createProduct = useCreateProduct();
-  const updateProduct = useUpdateProduct();
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -285,54 +254,6 @@ export default function ProductsListPage() {
       setSelectedRows(selectedRows.filter((rowId) => rowId !== id));
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la suppression");
-    }
-  };
-
-  const handleEdit = async (product: any) => {
-    try {
-      // Récupérer le produit complet
-      const response = await fetch(`/api/products/${product.id}`);
-      if (!response.ok) {
-        throw new Error("Impossible de récupérer les détails du produit");
-      }
-      const fullProduct = await response.json();
-
-      setSelectedProduct(fullProduct);
-      setEditFormData({
-        name: fullProduct.name || "",
-        price: fullProduct.price?.toString() || "",
-        stockQuantity: fullProduct.stockQuantity?.toString() || "0",
-        status: fullProduct.status || Status.ACTIVE,
-        categoryId: fullProduct.categoryId || "",
-        description: fullProduct.description || "",
-      });
-      setIsEditModalOpen(true);
-    } catch (error: any) {
-      toast.error(error.message || "Erreur lors du chargement du produit");
-    }
-  };
-
-  const handleUpdate = async () => {
-    if (!selectedProduct) return;
-
-    try {
-      await updateProduct.mutateAsync({
-        id: selectedProduct.id,
-        data: {
-          name: editFormData.name,
-          price: parseFloat(editFormData.price),
-          stockQuantity: parseInt(editFormData.stockQuantity) || 0,
-          status: editFormData.status as Status,
-          categoryId: editFormData.categoryId || undefined,
-          description: editFormData.description || undefined,
-        },
-      });
-
-      toast.success("Produit modifié avec succès");
-      setIsEditModalOpen(false);
-      setSelectedProduct(null);
-    } catch (error: any) {
-      toast.error(error.message || "Erreur lors de la modification du produit");
     }
   };
 
@@ -790,10 +711,10 @@ export default function ProductsListPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => handleEdit(product)}
-                            >
-                              Modifier
+                            <DropdownMenuItem asChild>
+                              <Link href={`/produits-listes/${product.id}/edit`}>
+                                Modifier
+                              </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleDuplicate(product)}
@@ -854,157 +775,6 @@ export default function ProductsListPage() {
         </div>
       </div>
 
-      {/* Modal d'édition */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Modifier le produit</DialogTitle>
-            <DialogDescription>
-              Modifiez les informations du produit. Cliquez sur Enregistrer pour
-              appliquer les modifications.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="edit-name">Nom du produit</Label>
-              <Input
-                id="edit-name"
-                value={editFormData.name}
-                onChange={(e) =>
-                  setEditFormData({ ...editFormData, name: e.target.value })
-                }
-                placeholder="Nom du produit"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-price">Prix (FCFA)</Label>
-                <Input
-                  id="edit-price"
-                  type="number"
-                  value={editFormData.price}
-                  onChange={(e) =>
-                    setEditFormData({
-                      ...editFormData,
-                      price: e.target.value,
-                    })
-                  }
-                  placeholder="0"
-                />
-              </div>
-
-              {/* <div className="grid gap-2">
-                <Label htmlFor="edit-stock">Stock</Label>
-                <Input
-                  id="edit-stock"
-                  type="number"
-                  value={editFormData.stockQuantity}
-                  onChange={(e) =>
-                    setEditFormData({
-                      ...editFormData,
-                      stockQuantity: e.target.value,
-                    })
-                  }
-                  placeholder="0"
-                />
-              </div> */}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-status">Statut</Label>
-                <Select
-                  value={String(editFormData.status)}
-                  onValueChange={(value) =>
-                    setEditFormData({
-                      ...editFormData,
-                      status: value as Status,
-                    })
-                  }
-                >
-                  <SelectTrigger id="edit-status" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={Status.ACTIVE}>Actif</SelectItem>
-                    <SelectItem value={Status.DRAFT}>Brouillon</SelectItem>
-                    <SelectItem value={Status.INACTIVE}>Inactif</SelectItem>
-                    <SelectItem value={Status.ARCHIVED}>Archivé</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="edit-category">Catégorie</Label>
-                <Select
-                  value={editFormData.categoryId}
-                  onValueChange={(value) =>
-                    setEditFormData({
-                      ...editFormData,
-                      categoryId: value,
-                    })
-                  }
-                >
-                  <SelectTrigger id="edit-category" className="w-full">
-                    <SelectValue placeholder="Sélectionner une catégorie" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Aucune catégorie">
-                      Aucune catégorie
-                    </SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="edit-description">Description</Label>
-              <Textarea
-                id="edit-description"
-                value={editFormData.description}
-                onChange={(e) =>
-                  setEditFormData({
-                    ...editFormData,
-                    description: e.target.value,
-                  })
-                }
-                placeholder="Description du produit"
-                rows={4}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsEditModalOpen(false)}
-              disabled={updateProduct.isPending}
-            >
-              Annuler
-            </Button>
-            <Button
-              onClick={handleUpdate}
-              disabled={updateProduct.isPending || !editFormData.name}
-            >
-              {updateProduct.isPending ? (
-                <>
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                  Enregistrement...
-                </>
-              ) : (
-                "Enregistrer"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

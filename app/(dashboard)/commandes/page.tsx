@@ -31,7 +31,6 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardAction,
 } from "@/components/ui/card";
 import {
   Table,
@@ -56,108 +55,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-
-// Mock data pour les commandes
-const orders = [
-  {
-    id: "#ORD-001",
-    customer: "John Doe",
-    email: "john@example.com",
-    products: [
-      { name: "Nike Air Max", quantity: 1, price: 129.99 },
-      { name: "Adidas Socks", quantity: 2, price: 9.99 },
-    ],
-    total: 149.97,
-    status: "delivered",
-    paymentStatus: "paid",
-    shippingAddress: "123 Main St, London, UK",
-    createdAt: "2025-01-15",
-    shippedAt: "2025-01-16",
-    deliveredAt: "2025-01-18",
-  },
-  {
-    id: "#ORD-002",
-    customer: "Jane Smith",
-    email: "jane@example.com",
-    products: [{ name: "iPhone 16 Pro", quantity: 1, price: 1299.99 }],
-    total: 1299.99,
-    status: "shipped",
-    paymentStatus: "paid",
-    shippingAddress: "456 Oak Ave, Manchester, UK",
-    createdAt: "2025-01-14",
-    shippedAt: "2025-01-15",
-    deliveredAt: null,
-  },
-  {
-    id: "#ORD-003",
-    customer: "Bob Johnson",
-    email: "bob@example.com",
-    products: [{ name: "Samsung Galaxy S25", quantity: 1, price: 1199.99 }],
-    total: 1199.99,
-    status: "processing",
-    paymentStatus: "paid",
-    shippingAddress: "789 Pine Rd, Birmingham, UK",
-    createdAt: "2025-01-14",
-    shippedAt: null,
-    deliveredAt: null,
-  },
-  {
-    id: "#ORD-004",
-    customer: "Alice Brown",
-    email: "alice@example.com",
-    products: [{ name: "realme Buds Wireless 5", quantity: 1, price: 139.99 }],
-    total: 139.99,
-    status: "pending",
-    paymentStatus: "pending",
-    shippingAddress: "321 Elm St, Liverpool, UK",
-    createdAt: "2025-01-13",
-    shippedAt: null,
-    deliveredAt: null,
-  },
-  {
-    id: "#ORD-005",
-    customer: "Charlie Wilson",
-    email: "charlie@example.com",
-    products: [
-      { name: "Nike Air Max", quantity: 2, price: 129.99 },
-      { name: "Running Shorts", quantity: 1, price: 29.99 },
-    ],
-    total: 289.97,
-    status: "cancelled",
-    paymentStatus: "refunded",
-    shippingAddress: "654 Maple Dr, Leeds, UK",
-    createdAt: "2025-01-12",
-    shippedAt: null,
-    deliveredAt: null,
-  },
-];
-
-const stats = [
-  {
-    title: "Commandes Total",
-    value: "1,234",
-    change: "+15.2%",
-    trend: "up",
-  },
-  {
-    title: "En Attente",
-    value: "23",
-    change: "-5",
-    trend: "down",
-  },
-  {
-    title: "Revenus Total",
-    value: "£45,678",
-    change: "+18.5%",
-    trend: "up",
-  },
-  {
-    title: "Taux de Conversion",
-    value: "3.2%",
-    change: "+0.5%",
-    trend: "up",
-  },
-];
+import { useOrders, useUpdateOrderStatus, useUpdateOrderPaymentStatus } from "@/hooks/useOrders";
+import type { OrderStatus, PaymentStatus } from "@/lib/api/orders";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const getStatusBadge = (status: string) => {
   const statusMap: Record<string, { className: string; label: string }> = {
@@ -185,6 +86,11 @@ const getStatusBadge = (status: string) => {
       className:
         "border-red-400 bg-red-50 text-red-800 dark:bg-red-900/70 dark:text-white/80",
       label: "Annulée",
+    },
+    refunded: {
+      className:
+        "border-gray-400 bg-gray-50 text-gray-800 dark:bg-gray-900/70 dark:text-white/80",
+      label: "Remboursée",
     },
   };
 
@@ -244,6 +150,52 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [paymentFilter, setPaymentFilter] = useState<string>("all");
 
+  const { data, isLoading, error } = useOrders({
+    status: statusFilter,
+    paymentStatus: paymentFilter,
+    search: searchQuery || undefined,
+  });
+  const updateStatusMutation = useUpdateOrderStatus();
+  const updatePaymentStatusMutation = useUpdateOrderPaymentStatus();
+
+  const orders = data?.orders ?? [];
+  const stats = data?.stats;
+
+  const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
+    try {
+      await updateStatusMutation.mutateAsync({ id: orderId, status: newStatus });
+      toast.success("Statut mis à jour");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erreur lors de la mise à jour");
+    }
+  };
+
+  const handlePaymentStatusChange = async (orderId: string, newPaymentStatus: PaymentStatus) => {
+    try {
+      await updatePaymentStatusMutation.mutateAsync({ id: orderId, paymentStatus: newPaymentStatus });
+      toast.success("Statut de paiement mis à jour");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erreur lors de la mise à jour du paiement");
+    }
+  };
+
+  const statusOptions: { value: OrderStatus; label: string }[] = [
+    { value: "PENDING", label: "En attente" },
+    { value: "PROCESSING", label: "En traitement" },
+    { value: "SHIPPED", label: "Expédiée" },
+    { value: "DELIVERED", label: "Livrée" },
+    { value: "CANCELLED", label: "Annulée" },
+    { value: "REFUNDED", label: "Remboursée" },
+  ];
+
+  const paymentStatusOptions: { value: PaymentStatus; label: string }[] = [
+    { value: "PENDING", label: "En attente" },
+    { value: "PAID", label: "Payée" },
+    { value: "FAILED", label: "Échouée" },
+    { value: "REFUNDED", label: "Remboursée" },
+    { value: "PARTIALLY_REFUNDED", label: "Partiellement remboursée" },
+  ];
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedRows(orders.map((o) => o.id));
@@ -260,17 +212,7 @@ export default function OrdersPage() {
     }
   };
 
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || order.status === statusFilter;
-    const matchesPayment =
-      paymentFilter === "all" || order.paymentStatus === paymentFilter;
-    return matchesSearch && matchesStatus && matchesPayment;
-  });
+  const filteredOrders = orders;
 
   return (
     <div className="space-y-4">
@@ -286,30 +228,43 @@ export default function OrdersPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardDescription>{stat.title}</CardDescription>
-                  <CardTitle className="font-semibold font-display text-2xl lg:text-3xl">
-                    {stat.value}
-                  </CardTitle>
-                </div>
-                <CardAction>
-                  <Badge
-                    variant="outline"
-                    className={
-                      stat.trend === "up" ? "text-green-600" : "text-red-600"
-                    }
-                  >
-                    {stat.change}
-                  </Badge>
-                </CardAction>
-              </div>
-            </CardHeader>
-          </Card>
-        ))}
+        <Card>
+          <CardHeader>
+            <CardDescription>Commandes Total</CardDescription>
+            <CardTitle className="font-semibold font-display text-2xl lg:text-3xl">
+              {stats ? stats.total.toLocaleString("fr-FR") : "-"}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardDescription>En Attente</CardDescription>
+            <CardTitle className="font-semibold font-display text-2xl lg:text-3xl">
+              {stats ? stats.pending : "-"}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardDescription>Revenus Total</CardDescription>
+            <CardTitle className="font-semibold font-display text-2xl lg:text-3xl">
+              {stats
+                ? `£${stats.totalRevenue.toLocaleString("fr-FR", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}`
+                : "-"}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardDescription>Livrées</CardDescription>
+            <CardTitle className="font-semibold font-display text-2xl lg:text-3xl">
+              {stats ? stats.delivered : "-"}
+            </CardTitle>
+          </CardHeader>
+        </Card>
       </div>
 
       {/* Filters and Search */}
@@ -374,6 +329,15 @@ export default function OrdersPage() {
 
           {/* Table */}
           <div className="rounded-lg border">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-24">
+                <Loader2 className="size-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : error ? (
+              <div className="py-24 text-center text-muted-foreground">
+                Erreur lors du chargement des commandes.
+              </div>
+            ) : (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -442,7 +406,7 @@ export default function OrdersPage() {
                       </TableCell>
                       <TableCell>
                         <code className="text-xs bg-muted px-2 py-1 rounded font-medium">
-                          {order.id}
+                          {order.orderNumber}
                         </code>
                       </TableCell>
                       <TableCell>
@@ -472,9 +436,63 @@ export default function OrdersPage() {
                           £{order.total.toFixed(2)}
                         </span>
                       </TableCell>
-                      <TableCell>{getStatusBadge(order.status)}</TableCell>
                       <TableCell>
-                        {getPaymentStatusBadge(order.paymentStatus)}
+                        <div className="flex items-center gap-2">
+                          <Select
+                            value={order.status}
+                            onValueChange={(value) =>
+                              handleStatusChange(order.id, value as OrderStatus)
+                            }
+                            disabled={
+                              updateStatusMutation.isPending &&
+                              updateStatusMutation.variables?.id === order.id
+                            }
+                          >
+                            <SelectTrigger className="w-[140px] h-8 border-0 shadow-none bg-transparent hover:bg-muted/50">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {statusOptions.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {updateStatusMutation.isPending &&
+                            updateStatusMutation.variables?.id === order.id && (
+                              <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                            )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Select
+                            value={order.paymentStatus}
+                            onValueChange={(value) =>
+                              handlePaymentStatusChange(order.id, value as PaymentStatus)
+                            }
+                            disabled={
+                              updatePaymentStatusMutation.isPending &&
+                              updatePaymentStatusMutation.variables?.id === order.id
+                            }
+                          >
+                            <SelectTrigger className="w-[160px] h-8 border-0 shadow-none bg-transparent hover:bg-muted/50">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {paymentStatusOptions.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {updatePaymentStatusMutation.isPending &&
+                            updatePaymentStatusMutation.variables?.id === order.id && (
+                              <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                            )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
@@ -512,20 +530,20 @@ export default function OrdersPage() {
                                 Modifier le statut
                               </Link>
                             </DropdownMenuItem>
-                            {order.status !== "shipped" &&
-                              order.status !== "delivered" && (
+                            {order.status.toLowerCase() !== "shipped" &&
+                              order.status.toLowerCase() !== "delivered" && (
                                 <DropdownMenuItem>
                                   <Truck className="mr-2 size-4" />
                                   Marquer comme expédiée
                                 </DropdownMenuItem>
                               )}
-                            {order.status === "shipped" && (
+                            {order.status.toLowerCase() === "shipped" && (
                               <DropdownMenuItem>
                                 <CheckCircle className="mr-2 size-4" />
                                 Marquer comme livrée
                               </DropdownMenuItem>
                             )}
-                            {order.status !== "cancelled" && (
+                            {order.status.toLowerCase() !== "cancelled" && (
                               <>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem variant="destructive">
@@ -542,6 +560,7 @@ export default function OrdersPage() {
                 )}
               </TableBody>
             </Table>
+            )}
           </div>
 
           {/* Pagination */}

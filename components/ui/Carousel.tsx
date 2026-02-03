@@ -26,13 +26,13 @@ export function Carousel({ images: propImages }: CarouselProps) {
   const images: CarouselImage[] = propImages
     ? propImages
     : apiSlides.map((slide: any) => ({
-        src: slide.image,
-        alt: slide.alt || slide.title,
-        title: slide.title,
-        description: slide.description || "",
-        link: slide.link,
-        linkText: slide.linkText,
-      }));
+      src: slide.image,
+      alt: slide.alt || slide.title,
+      title: slide.title,
+      description: slide.description || "",
+      link: slide.link,
+      linkText: slide.linkText,
+    }));
 
   const [index, setIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -56,11 +56,22 @@ export function Carousel({ images: propImages }: CarouselProps) {
     }
   }, [isTransitioning]);
 
+  // Auto-play functionality (optional)
+  useEffect(() => {
+    if (images.length === 0) return;
+
+    const interval = setInterval(() => {
+      next();
+    }, 5000); // Change slide every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [index, images.length]);
+
   // Loading state
   if (isLoading && !propImages) {
     return (
-      <div className="h-[450px] w-full flex items-center justify-center bg-gray-100">
-        <Loader2 className="size-8 animate-spin text-gray-400" />
+      <div className="h-[300px] sm:h-[400px] md:h-[450px] lg:h-[500px] w-full flex items-center justify-center bg-gray-100">
+        <Loader2 className="size-6 sm:size-8 animate-spin text-gray-400" />
       </div>
     );
   }
@@ -73,89 +84,98 @@ export function Carousel({ images: propImages }: CarouselProps) {
   const currentSlide = images[index];
 
   return (
-    <div className="h-[450px] w-full relative overflow-hidden p-5">
+    <div className="h-[300px] sm:h-[400px] md:h-[450px] lg:h-[500px] w-full relative overflow-hidden p-3 sm:p-4 md:p-5">
       {/* overlay */}
       <div className="absolute inset-0 bg-black/50 z-10"></div>
+
       {/* Images avec animation de fade */}
       {images.map((image, i) => (
         <div
           key={i}
-          className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-500  ${
-            i === index ? "opacity-100 z-0" : "opacity-0 z-[-1]"
-          }`}
+          className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-500  ${i === index ? "opacity-100 z-0" : "opacity-0 z-[-1]"
+            }`}
           style={{ backgroundImage: `url(${image.src})` }}
         />
       ))}
 
       <div className="relative flex flex-col justify-end items-start inset-0 h-full w-full z-20">
-        <div className="flex items-end justify-between w-full">
-          <div>
-            <h1 className="text-4xl font-bold text-white uppercase ">
+        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between w-full gap-4 sm:gap-0">
+          {/* Content Section */}
+          <div className="max-w-full sm:max-w-[60%] lg:max-w-[50%]">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white uppercase leading-tight">
               {currentSlide.title}
             </h1>
             {currentSlide.description && (
-              <p className="text-white mt-2 text-lg">{currentSlide.description}</p>
+              <p className="text-white mt-1 sm:mt-2 text-sm sm:text-base md:text-lg line-clamp-2 sm:line-clamp-none">
+                {currentSlide.description}
+              </p>
             )}
 
-            <div className="flex gap-2 mt-4 items-center">
+            {/* Buttons - Stacked on mobile, inline on desktop */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-3 sm:mt-4 items-start sm:items-center w-full sm:w-auto">
               {currentSlide.link ? (
                 <Link
                   href={currentSlide.link}
-                  className="group relative inline-block overflow-hidden px-7 py-2 bg-white text-sm font-bold orbitron uppercase cursor-pointer"
+                  className="group relative inline-block overflow-hidden px-4 sm:px-6 md:px-7 py-2 bg-white text-xs sm:text-sm font-bold orbitron uppercase cursor-pointer w-full sm:w-auto text-center"
                   style={{ borderRadius: "5px" }}
                 >
                   {/* Texte visible */}
                   <span className="block transition-transform duration-250 group-hover:-translate-y-9">
-                    {currentSlide.linkText || "Acheter maintenant"}
+                    {currentSlide.linkText || "Acheter"}
                   </span>
 
                   {/* Texte qui arrive */}
                   <span className="absolute left-0 top-full w-full text-center transition-transform duration-250 group-hover:-translate-y-7">
-                    Shop the collection
+                    {currentSlide.linkText || "Acheter"}
                   </span>
                 </Link>
               ) : (
                 <span
-                  className="group relative inline-block overflow-hidden px-7 py-2 bg-white text-sm font-bold orbitron uppercase"
+                  className="group relative inline-block overflow-hidden px-4 sm:px-6 md:px-7 py-2 bg-white text-xs sm:text-sm font-bold orbitron uppercase w-full sm:w-auto text-center"
                   style={{ borderRadius: "5px" }}
                 >
                   {/* Texte visible */}
                   <span className="block transition-transform duration-250 group-hover:-translate-y-9">
-                    Acheter maintenant
+                    Acheter
                   </span>
 
                   {/* Texte qui arrive */}
                   <span className="absolute left-0 top-full w-full text-center transition-transform duration-250 group-hover:-translate-y-7">
-                    Shop the collection
+                    Acheter
                   </span>
                 </span>
               )}
 
               <span
-                className="group relative inline-block overflow-hidden px-7 py-2 bg-black/30 text-sm font-bold orbitron uppercase cursor-pointer hover:border hover:border-white"
+                className="hidden sm:inline-block group relative overflow-hidden px-4 sm:px-6 md:px-7 py-2 bg-black/30 text-xs sm:text-sm font-bold orbitron uppercase cursor-pointer hover:border hover:border-white"
                 style={{ borderRadius: "5px" }}
               >
                 {/* Texte visible */}
                 <span className="block text-white transition-transform duration-250 group-hover:-translate-y-9">
-                  Shop the collection
+                  Voir la collection
                 </span>
 
                 {/* Texte qui arrive */}
-                <span className="text-white absolute left-0 top-full w-full text-center transition-transform duration-250 group-hover:-translate-y-7 ">
-                  Shop the collection
+                <span className="text-white absolute left-0 top-full w-full text-center transition-transform duration-250 group-hover:-translate-y-7">
+                  Voir la collection
                 </span>
               </span>
             </div>
           </div>
-          <div className="flex gap-2 items-center">
+
+          {/* Navigation Controls */}
+          <div className="flex gap-2 items-center self-end sm:self-auto">
+            {/* Desktop Navigation - Hidden on mobile */}
             <button
               onClick={prev}
-              className=" bg-black/50 hover:bg-black/70 text-white p-[.5px] rounded-md z-10 transition-all duration-200 backdrop-blur-sm cursor-pointer"
+              className="hidden sm:block bg-black/50 hover:bg-black/70 text-white p-[.5px] rounded-md z-10 transition-all duration-200 backdrop-blur-sm cursor-pointer"
               aria-label="Image précédente"
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
             </button>
-            <div className=" flex gap-2 z-10">
+
+            {/* Dots Navigation */}
+            <div className="flex gap-1.5 sm:gap-2 z-10">
               {images.map((_, i) => (
                 <button
                   key={i}
@@ -165,24 +185,42 @@ export function Carousel({ images: propImages }: CarouselProps) {
                       setIndex(i);
                     }
                   }}
-                  className={`h-1 rounded-full transition-all duration-300 ${
-                    i === index
-                      ? "w-8 bg-white"
-                      : "w-2 bg-white/50 hover:bg-white/75"
-                  }`}
+                  className={`h-1 rounded-full transition-all duration-300 ${i === index
+                      ? "w-6 sm:w-8 bg-white"
+                      : "w-1.5 sm:w-2 bg-white/50 hover:bg-white/75"
+                    }`}
                   aria-label={`Aller à l'image ${i + 1}`}
                 />
               ))}
             </div>
+
+            {/* Desktop Navigation - Hidden on mobile */}
             <button
               onClick={next}
-              className=" bg-black/50 hover:bg-black/70 text-white p-[.5px] rounded-md z-10 transition-all duration-200 backdrop-blur-sm"
+              className="hidden sm:block bg-black/50 hover:bg-black/70 text-white p-[.5px] rounded-md z-10 transition-all duration-200 backdrop-blur-sm"
               aria-label="Image suivante"
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
             </button>
           </div>
         </div>
+
+        {/* Mobile Navigation - Absolute positioned chevrons */}
+        <button
+          onClick={prev}
+          className="sm:hidden absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1 rounded-md z-10 transition-all duration-200 backdrop-blur-sm cursor-pointer"
+          aria-label="Image précédente"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+
+        <button
+          onClick={next}
+          className="sm:hidden absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1 rounded-md z-10 transition-all duration-200 backdrop-blur-sm"
+          aria-label="Image suivante"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
       </div>
     </div>
   );

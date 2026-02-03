@@ -114,7 +114,7 @@ export interface UpdateProductInput {
   compareAtPrice?: number;
   costPrice?: number;
   taxRate?: number;
-  status?: Status;
+  status?: string;
   featured?: boolean;
   isNewArrival?: boolean;
   releaseDate?: Date;
@@ -135,7 +135,7 @@ export interface UpdateProductInput {
 }
 
 export interface ProductFilters {
-  status?: Status;
+  status?: string;
   search?: string;
   categoryId?: string;
   featured?: boolean;

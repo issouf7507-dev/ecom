@@ -66,9 +66,7 @@ import { useEdgeStore } from "@/lib/edgestore";
 import {
   useProducts,
   useCreateProduct,
-  useUpdateProduct,
   useDeleteProduct,
-  useProduct,
 } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { Status } from "@prisma/client";
@@ -85,7 +83,6 @@ export default function NewArrivalsPage() {
   const router = useRouter();
   const { edgestore } = useEdgeStore();
   const createProduct = useCreateProduct();
-  const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
 
   // Fetch new arrivals products
@@ -96,9 +93,7 @@ export default function NewArrivalsPage() {
 
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
   // Form state
@@ -206,53 +201,12 @@ export default function NewArrivalsPage() {
     });
     setImages([]);
     setVariants([]);
-    setSelectedProduct(null);
   };
 
   // Open create modal
   const handleCreateClick = () => {
     resetForm();
     setIsCreateModalOpen(true);
-  };
-
-  // Open edit modal
-  const handleEditClick = async (product: Product) => {
-    setSelectedProduct(product);
-    setFormData({
-      name: product.name,
-      slug: product.slug,
-      sku: product.barcode || "",
-      barcode: product.barcode || "",
-      description: product.description || "",
-      shortDescription: product.shortDescription || "",
-      basePrice: product.price.toString(),
-      discountedPrice: product.compareAtPrice?.toString() || "",
-      costPrice: product.costPrice?.toString() || "",
-      taxRate: product.taxRate.toString(),
-      chargeTax: product.taxRate > 0,
-      stockQuantity: product.stockQuantity.toString(),
-      lowStockThreshold: product.lowStockThreshold.toString(),
-      status: product.status as Status,
-      categoryId: product.categoryId || "",
-      weight: product.weight?.toString() || "",
-      length: product.length?.toString() || "",
-      width: product.width?.toString() || "",
-      height: product.height?.toString() || "",
-    });
-
-    // Load existing images
-    if (product.images && product.images.length > 0) {
-      setImages(
-        product.images.map((img) => ({
-          url: img.url,
-          progress: 100,
-        }))
-      );
-    } else {
-      setImages([]);
-    }
-
-    setIsEditModalOpen(true);
   };
 
   // Handle duplicate
@@ -491,72 +445,6 @@ export default function NewArrivalsPage() {
       resetForm();
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la création du produit");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleUpdateSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedProduct) return;
-
-    setIsSubmitting(true);
-
-    try {
-      if (uploadingImages.length > 0) {
-        toast.info("Veuillez attendre la fin de l'upload des images");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (!formData.name || !formData.slug) {
-        toast.error("Le nom et le slug sont obligatoires");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (!formData.basePrice) {
-        toast.error("Le prix de base est obligatoire");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Update product
-      await updateProduct.mutateAsync({
-        id: selectedProduct.id,
-        data: {
-          name: formData.name,
-          slug: formData.slug,
-          description: formData.description || undefined,
-          shortDescription: formData.shortDescription || undefined,
-          barcode: formData.barcode || undefined,
-          price: parseFloat(formData.basePrice),
-          compareAtPrice: formData.discountedPrice
-            ? parseFloat(formData.discountedPrice)
-            : undefined,
-          costPrice: formData.costPrice
-            ? parseFloat(formData.costPrice)
-            : undefined,
-          taxRate: formData.chargeTax ? parseFloat(formData.taxRate) : 0,
-          status: formData.status,
-          isNewArrival: true, // Keep as new arrival
-          stockQuantity: parseInt(formData.stockQuantity) || 0,
-          lowStockThreshold: parseInt(formData.lowStockThreshold) || 10,
-          weight: formData.weight ? parseFloat(formData.weight) : undefined,
-          length: formData.length ? parseFloat(formData.length) : undefined,
-          width: formData.width ? parseFloat(formData.width) : undefined,
-          height: formData.height ? parseFloat(formData.height) : undefined,
-          categoryId: formData.categoryId || undefined,
-        },
-      });
-
-      // Note: Image updates would need a separate API endpoint
-      // For now, we'll just update the product data
-      toast.success("Produit modifié avec succès");
-      setIsEditModalOpen(false);
-      resetForm();
-    } catch (error: any) {
-      toast.error(error.message || "Erreur lors de la modification du produit");
     } finally {
       setIsSubmitting(false);
     }
@@ -1072,7 +960,6 @@ export default function NewArrivalsPage() {
           variant="outline"
           onClick={() => {
             setIsCreateModalOpen(false);
-            setIsEditModalOpen(false);
             resetForm();
           }}
           disabled={isSubmitting}
@@ -1217,11 +1104,11 @@ export default function NewArrivalsPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => handleEditClick(product)}
-                          >
-                            <Edit className="mr-2 size-4" />
-                            Modifier
+                          <DropdownMenuItem asChild>
+                            <Link href={`/nouvelles-arrivees/${product.id}/edit`}>
+                              <Edit className="mr-2 size-4" />
+                              Modifier
+                            </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleDuplicateClick(product)}
@@ -1259,22 +1146,6 @@ export default function NewArrivalsPage() {
           <ProductForm
             onSubmit={handleCreateSubmit}
             submitLabel="Créer le produit"
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Modifier le produit</DialogTitle>
-            <DialogDescription>
-              Modifiez les informations du produit
-            </DialogDescription>
-          </DialogHeader>
-          <ProductForm
-            onSubmit={handleUpdateSubmit}
-            submitLabel="Enregistrer les modifications"
           />
         </DialogContent>
       </Dialog>

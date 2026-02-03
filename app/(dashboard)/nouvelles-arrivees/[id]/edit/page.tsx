@@ -7,9 +7,9 @@ import {
   ChevronLeft,
   Image as ImageIcon,
   Upload,
-  CirclePlus,
   X,
   Loader2,
+  Sparkles,
   Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,6 @@ import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -47,7 +46,7 @@ interface UploadedImage {
   progress?: number;
 }
 
-export default function EditUpcomingProductPage() {
+export default function EditNewArrivalProductPage() {
   const router = useRouter();
   const params = useParams();
   const productId = params?.id as string;
@@ -55,8 +54,6 @@ export default function EditUpcomingProductPage() {
   const updateProduct = useUpdateProduct();
   const { data: product, isLoading: productLoading } = useProduct(productId);
   const { data: categories = [] } = useCategories();
-
-  // console.log(product);
 
   const [formData, setFormData] = useState<{
     name: string;
@@ -108,15 +105,10 @@ export default function EditUpcomingProductPage() {
 
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [uploadingImages, setUploadingImages] = useState<string[]>([]);
-  const [variants, setVariants] = useState<
-    Array<{ name: string; sku: string; price: string; stock: string }>
-  >([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Load product data
   useEffect(() => {
     if (product) {
-
       const availabilityDate = product.availabilityDate
         ? new Date(product.availabilityDate).toISOString().split("T")[0]
         : "";
@@ -147,7 +139,6 @@ export default function EditUpcomingProductPage() {
         isPreOrder: product.isPreOrder,
       });
 
-      // Load existing images
       if (product.images && product.images.length > 0) {
         setImages(
           product.images.map((img) => ({
@@ -239,20 +230,6 @@ export default function EditUpcomingProductPage() {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleVariantChange = (index: number, field: string, value: string) => {
-    const newVariants = [...variants];
-    newVariants[index] = { ...newVariants[index], [field]: value };
-    setVariants(newVariants);
-  };
-
-  const addVariant = () => {
-    setVariants([...variants, { name: "", sku: "", price: "", stock: "0" }]);
-  };
-
-  const removeVariant = (index: number) => {
-    setVariants(variants.filter((_, i) => i !== index));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!productId) return;
@@ -286,7 +263,6 @@ export default function EditUpcomingProductPage() {
         return;
       }
 
-      // Combine date and time for availabilityDate
       let availabilityDate: Date | undefined;
       if (formData.availabilityDate && formData.availabilityTime) {
         availabilityDate = new Date(
@@ -311,6 +287,7 @@ export default function EditUpcomingProductPage() {
           : undefined,
         taxRate: formData.chargeTax ? parseFloat(formData.taxRate) : 0,
         status: formData.status || "",
+        isNewArrival: true,
         isPreOrder: formData.isPreOrder,
         availabilityDate: availabilityDate,
         availabilityTime: formData.availabilityTime || undefined,
@@ -332,7 +309,7 @@ export default function EditUpcomingProductPage() {
       });
 
       toast.success("Produit modifié avec succès");
-      router.push("/produits-a-venir");
+      router.push("/nouvelles-arrivees");
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la modification du produit");
     } finally {
@@ -340,7 +317,6 @@ export default function EditUpcomingProductPage() {
     }
   };
 
-  // Combine date and time for countdown preview
   const getFullDateTime = () => {
     if (formData.availabilityDate && formData.availabilityTime) {
       return `${formData.availabilityDate}T${formData.availabilityTime}:00`;
@@ -362,7 +338,7 @@ export default function EditUpcomingProductPage() {
       <div className="flex flex-col items-center justify-center py-12">
         <p className="text-muted-foreground">Produit non trouvé</p>
         <Button asChild className="mt-4">
-          <Link href="/produits-a-venir">Retour à la liste</Link>
+          <Link href="/nouvelles-arrivees">Retour à la liste</Link>
         </Button>
       </div>
     );
@@ -371,18 +347,17 @@ export default function EditUpcomingProductPage() {
   return (
     <div className="space-y-4">
       <form onSubmit={handleSubmit}>
-        {/* Header */}
         <div className="mb-4 flex flex-col justify-between space-y-4 lg:flex-row lg:items-center lg:space-y-2">
           <div className="flex items-center gap-4">
             <Button variant="outline" size="icon" asChild>
-              <Link href="/produits-a-venir">
+              <Link href="/nouvelles-arrivees">
                 <ChevronLeft className="size-4" />
               </Link>
             </Button>
             <div className="flex items-center gap-3">
-              <Clock className="size-6 text-blue-500" />
+              <Sparkles className="size-6 text-purple-500" />
               <h1 className="text-2xl font-bold tracking-tight orbitron">
-                Modifier le produit à venir
+                Modifier la nouvelle arrivée
               </h1>
             </div>
           </div>
@@ -413,9 +388,7 @@ export default function EditUpcomingProductPage() {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-6">
-          {/* Left Column - Main Content */}
           <div className="space-y-4 lg:col-span-4">
-            {/* Product Details */}
             <Card>
               <CardHeader>
                 <CardTitle>Détails du produit</CardTitle>
@@ -483,7 +456,6 @@ export default function EditUpcomingProductPage() {
               </CardContent>
             </Card>
 
-            {/* Product Images */}
             <Card>
               <CardHeader>
                 <CardTitle>
@@ -577,9 +549,7 @@ export default function EditUpcomingProductPage() {
             </Card>
           </div>
 
-          {/* Right Column - Sidebar */}
           <div className="space-y-4 lg:col-span-2">
-            {/* Availability Date & Time */}
             <Card className="border-blue-200 bg-blue-50/50">
               <CardHeader>
                 <div className="flex items-center gap-2">
@@ -648,7 +618,6 @@ export default function EditUpcomingProductPage() {
               </CardContent>
             </Card>
 
-            {/* Pricing */}
             <Card>
               <CardHeader>
                 <CardTitle>Tarification</CardTitle>
@@ -750,7 +719,6 @@ export default function EditUpcomingProductPage() {
               </CardContent>
             </Card>
 
-            {/* Status */}
             <Card>
               <CardHeader>
                 <CardTitle>Statut</CardTitle>
@@ -777,7 +745,6 @@ export default function EditUpcomingProductPage() {
               </CardContent>
             </Card>
 
-            {/* Categories */}
             <Card>
               <CardHeader>
                 <CardTitle>Catégorie</CardTitle>
@@ -808,7 +775,6 @@ export default function EditUpcomingProductPage() {
               </CardContent>
             </Card>
 
-            {/* Dimensions */}
             <Card>
               <CardHeader>
                 <CardTitle>Dimensions & Poids</CardTitle>

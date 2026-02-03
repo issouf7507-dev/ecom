@@ -55,21 +55,7 @@ const data = {
       url: "/produits-listes",
       icon: IconListDetails,
     },
-    {
-      title: "Catégories",
-      url: "/categories",
-      icon: IconCategory,
-    },
-    {
-      title: "Carousel",
-      url: "/carousel",
-      icon: IconPhoto,
-    },
-    {
-      title: "Accordéon Interactif",
-      url: "/accordion",
-      icon: IconPhoto,
-    },
+
     {
       title: "Nouvelles Arrivées",
       url: "/nouvelles-arrivees",
@@ -80,20 +66,38 @@ const data = {
       url: "/produits-a-venir",
       icon: IconClock,
     },
+
+    {
+      title: "Catégories",
+      url: "/categories",
+      icon: IconCategory,
+    },
+
     {
       title: "Commandes",
       url: "/commandes",
       icon: IconShoppingCart,
     },
-    {
-      title: "Clients",
-      url: "/clients",
-      icon: IconUsers,
-    },
+    // {
+    //   title: "Clients",
+    //   url: "/clients",
+    //   icon: IconUsers,
+    // },
     {
       title: "Campagnes",
       url: "/campagnes",
       icon: IconMail,
+    },
+
+    {
+      title: "Carousel",
+      url: "/carousel",
+      icon: IconPhoto,
+    },
+    {
+      title: "Accordéon Interactif",
+      url: "/accordion",
+      icon: IconPhoto,
     },
     {
       title: "Analytics",
