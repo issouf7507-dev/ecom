@@ -39,7 +39,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, any>(
       <motion.div
         ref={ref}
         className={cn(
-          "group relative flex h-full w-full flex-col items-center justify-start overflow-hidden rounded-xl  bg-amber-50/35 p-6 text-center text-card-foreground transition-all duration-300 ease-in-out ",
+          "group relative flex h-full w-full flex-col items-center justify-start overflow-hidden rounded-xl p-6 text-center text-card-foreground transition-all duration-300 ease-in-out ",
           className
         )}
         whileHover={{ y: -5 }}

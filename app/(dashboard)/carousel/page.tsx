@@ -25,6 +25,7 @@ import {
   CardTitle,
   CardDescription,
   CardAction,
+  CardContent,
 } from "@/components/ui/card";
 import {
   Table,
@@ -252,7 +253,7 @@ export default function CarouselPage() {
 
     // Trouver le slide à supprimer pour récupérer l'URL de l'image
     const slideToDelete = slides.find((s) => s.id === deleteConfirm);
-    
+
     // Supprimer l'image d'EdgeStore si elle y est stockée
     if (slideToDelete?.image && slideToDelete.image.startsWith("http") && slideToDelete.image.includes("files.edgestore.dev")) {
       try {
@@ -337,7 +338,7 @@ export default function CarouselPage() {
             {slides.length > 1 ? "s" : ""}
           </CardDescription>
         </CardHeader>
-        <CardAction>
+        <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="size-6 animate-spin" />
@@ -471,7 +472,7 @@ export default function CarouselPage() {
               </Table>
             </div>
           )}
-        </CardAction>
+        </CardContent>
       </Card>
 
       {/* Create/Edit Dialog */}

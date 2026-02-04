@@ -16,7 +16,8 @@ import {
   Edit,
   Trash2,
   Copy,
-  Eye,
+
+  Ellipsis,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
@@ -209,6 +210,38 @@ export default function NewArrivalsPage() {
     setIsCreateModalOpen(true);
   };
 
+  const getStatusBadge = (status: Status) => {
+    const statusMap: Record<Status, { className: string; label: string }> = {
+      [Status.ACTIVE]: {
+        className:
+          "border-green-400 bg-green-50 text-green-800 dark:bg-green-900/70 dark:text-white/80",
+        label: "Actif",
+      },
+      [Status.DRAFT]: {
+        className:
+          "border-gray-400 bg-gray-50 text-gray-800 dark:bg-gray-900/70 dark:text-white/80",
+        label: "Brouillon",
+      },
+      [Status.INACTIVE]: {
+        className:
+          "border-orange-400 bg-orange-50 text-orange-800 dark:bg-orange-900/70 dark:text-white/80",
+        label: "Inactif",
+      },
+      [Status.ARCHIVED]: {
+        className:
+          "border-red-400 bg-red-50 text-red-800 dark:bg-red-900/70 dark:text-white/80",
+        label: "Archivé",
+      },
+    };
+
+    const statusConfig = statusMap[status] || statusMap[Status.ACTIVE];
+    return (
+      <Badge className={`capitalize ${statusConfig.className}`}>
+        {statusConfig.label}
+      </Badge>
+    );
+  };
+
   // Handle duplicate
   const handleDuplicateClick = async (product: Product) => {
     try {
@@ -235,11 +268,11 @@ export default function NewArrivalsPage() {
         images:
           product.images && product.images.length > 0
             ? product.images.map((img, index) => ({
-                url: img.url,
-                alt: `${product.name} (Copie)`,
-                sortOrder: index,
-                isPrimary: index === 0,
-              }))
+              url: img.url,
+              alt: `${product.name} (Copie)`,
+              sortOrder: index,
+              isPrimary: index === 0,
+            }))
             : undefined,
       };
 
@@ -1086,21 +1119,13 @@ export default function NewArrivalsPage() {
                     <TableCell>{product.stockQuantity}</TableCell>
                     <TableCell>{product.category?.name || "Aucune"}</TableCell>
                     <TableCell>
-                      <Badge
-                        variant={
-                          product.status === Status.ACTIVE
-                            ? "default"
-                            : "secondary"
-                        }
-                      >
-                        {product.status}
-                      </Badge>
+                      {getStatusBadge(product.status)}
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon">
-                            <Eye className="size-4" />
+                            <Ellipsis className="size-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">

@@ -14,6 +14,7 @@ import {
   Clock,
   Loader2,
   X,
+  Ellipsis,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
@@ -199,9 +200,9 @@ export default function UpcomingProductsPage() {
 
     const nextDate = upcomingDates[0]
       ? upcomingDates[0].toLocaleDateString("fr-FR", {
-          day: "numeric",
-          month: "long",
-        })
+        day: "numeric",
+        month: "long",
+      })
       : "Aucune";
 
     return [
@@ -256,11 +257,11 @@ export default function UpcomingProductsPage() {
         images:
           product.images && product.images.length > 0
             ? product.images.map((img, index) => ({
-                url: img.url,
-                alt: `${product.name} (Copie)`,
-                sortOrder: index,
-                isPrimary: index === 0,
-              }))
+              url: img.url,
+              alt: `${product.name} (Copie)`,
+              sortOrder: index,
+              isPrimary: index === 0,
+            }))
             : undefined,
       };
 
@@ -386,19 +387,19 @@ export default function UpcomingProductsPage() {
                 {(searchQuery ||
                   statusFilter !== "all" ||
                   categoryFilter !== "all") && (
-                  <Button
-                    variant="outline"
-                    size="default"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setStatusFilter("all");
-                      setCategoryFilter("all");
-                    }}
-                  >
-                    <X className="size-4" />
-                    Réinitialiser
-                  </Button>
-                )}
+                    <Button
+                      variant="outline"
+                      size="default"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setStatusFilter("all");
+                        setCategoryFilter("all");
+                      }}
+                    >
+                      <X className="size-4" />
+                      Réinitialiser
+                    </Button>
+                  )}
               </div>
             </div>
           </div>
@@ -423,8 +424,8 @@ export default function UpcomingProductsPage() {
                 <div className="flex flex-col items-center justify-center py-12">
                   <p className="text-muted-foreground">
                     {searchQuery ||
-                    statusFilter !== "all" ||
-                    categoryFilter !== "all"
+                      statusFilter !== "all" ||
+                      categoryFilter !== "all"
                       ? "Aucun produit trouvé"
                       : "Aucun produit à venir"}
                   </p>
@@ -529,7 +530,7 @@ export default function UpcomingProductsPage() {
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="icon">
-                                    <Eye className="size-4" />
+                                    <Ellipsis className="size-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">

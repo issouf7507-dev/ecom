@@ -6,14 +6,12 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Plus,
-  Search,
-  CirclePlus,
+
   Funnel,
   ArrowUpDown,
   Star,
   Ellipsis,
-  ChevronLeft,
-  ChevronRight,
+
   Columns2,
   X,
   Loader2,
@@ -444,8 +442,8 @@ export default function ProductsListPage() {
                     newArrivalFilter === "all"
                       ? "all"
                       : newArrivalFilter
-                      ? "true"
-                      : "false"
+                        ? "true"
+                        : "false"
                   }
                   onValueChange={(value) =>
                     setNewArrivalFilter(
@@ -467,8 +465,8 @@ export default function ProductsListPage() {
                     preOrderFilter === "all"
                       ? "all"
                       : preOrderFilter
-                      ? "true"
-                      : "false"
+                        ? "true"
+                        : "false"
                   }
                   onValueChange={(value) =>
                     setPreOrderFilter(

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { ProductCard } from "@/components/ui/product-card-2";
 import Link from "next/link";
 import {
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Grid,
   List,
   SlidersHorizontal,
@@ -91,6 +92,9 @@ const formatDate = (date: Date | string | null) => {
   });
 };
 
+const ITEMS_PER_PAGE_OPTIONS = [12, 24, 48] as const;
+const DEFAULT_ITEMS_PER_PAGE = 12;
+
 export default function UpcomingProductsPage() {
   // Fetch products with isPreOrder filter
   const { data: apiProducts = [], isLoading } = useProducts({
@@ -114,6 +118,8 @@ export default function UpcomingProductsPage() {
   const [sortBy, setSortBy] = useState<SortOption>("availability");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(DEFAULT_ITEMS_PER_PAGE);
   const [filters, setFilters] = useState<FilterState>({
     priceRange: "all",
     categories: [],
@@ -209,6 +215,51 @@ export default function UpcomingProductsPage() {
     setProducts(sorted);
   }, [sortBy, filters, allProducts]);
 
+  // Reset to page 1 when filters or sort change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortBy, filters]);
+
+  // Pagination computed values
+  const totalPages = Math.max(1, Math.ceil(products.length / itemsPerPage));
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return products.slice(start, start + itemsPerPage);
+  }, [products, currentPage, itemsPerPage]);
+
+  // Page numbers to show (with ellipsis if many pages)
+  const pageNumbers = useMemo((): (number | "ellipsis")[] => {
+    const delta = 2;
+    const range: number[] = [];
+    const rangeWithDots: (number | "ellipsis")[] = [];
+    let prevNum: number | undefined;
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+        range.push(i);
+      }
+    }
+    for (const i of range) {
+      if (prevNum !== undefined && i - prevNum !== 1) rangeWithDots.push("ellipsis");
+      rangeWithDots.push(i);
+      prevNum = i;
+    }
+    return rangeWithDots;
+  }, [currentPage, totalPages]);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
+
+  // Scroll to 300px when changing page (pagination)
+  const isInitialMount = useRef(true);
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    window.scrollTo({ top: 300, behavior: "smooth" });
+  }, [currentPage]);
+
   const toggleCategory = (category: string) => {
     setFilters((prev) => ({
       ...prev,
@@ -279,7 +330,10 @@ export default function UpcomingProductsPage() {
               )}
             </button>
             <span className="text-sm text-gray-600 orbitron">
-              {products.length} produit{products.length > 1 ? "s" : ""} en précommande
+              {products.length > 0
+                ? `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, products.length)} sur ${products.length}`
+                : "0"}{" "}
+              produit{products.length !== 1 ? "s" : ""} en précommande
             </span>
           </div>
 
@@ -311,25 +365,40 @@ export default function UpcomingProductsPage() {
               <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 size-4 pointer-events-none" />
             </div>
 
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 orbitron hidden sm:inline">Par page</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="appearance-none px-3 py-2 pr-7 border border-gray-300 rounded-lg bg-white cursor-pointer hover:bg-gray-50 orbitron text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              >
+                {ITEMS_PER_PAGE_OPTIONS.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-1">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-2 rounded transition-colors ${
-                  viewMode === "grid"
-                    ? "bg-black text-white"
-                    : "hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded transition-colors ${viewMode === "grid"
+                  ? "bg-black text-white"
+                  : "hover:bg-gray-100"
+                  }`}
                 aria-label="Vue grille"
               >
                 <Grid className="size-4" />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 rounded transition-colors ${
-                  viewMode === "list"
-                    ? "bg-black text-white"
-                    : "hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded transition-colors ${viewMode === "list"
+                  ? "bg-black text-white"
+                  : "hover:bg-gray-100"
+                  }`}
                 aria-label="Vue liste"
               >
                 <List className="size-4" />
@@ -424,11 +493,10 @@ export default function UpcomingProductsPage() {
                             priceRange: range.value,
                           }))
                         }
-                        className={`px-3 py-1.5 rounded-lg border transition-colors orbitron text-xs font-semibold ${
-                          filters.priceRange === range.value
-                            ? "bg-black text-white border-black"
-                            : "bg-white text-black border-gray-300 hover:bg-gray-50"
-                        }`}
+                        className={`px-3 py-1.5 rounded-lg border transition-colors orbitron text-xs font-semibold ${filters.priceRange === range.value
+                          ? "bg-black text-white border-black"
+                          : "bg-white text-black border-gray-300 hover:bg-gray-50"
+                          }`}
                       >
                         {range.label}
                       </button>
@@ -447,11 +515,10 @@ export default function UpcomingProductsPage() {
                       <button
                         key={category}
                         onClick={() => toggleCategory(category)}
-                        className={`px-3 py-2 rounded-lg border transition-colors orbitron text-xs font-semibold text-left ${
-                          filters.categories.includes(category)
-                            ? "bg-black text-white border-black"
-                            : "bg-white text-black border-gray-300 hover:bg-gray-50"
-                        }`}
+                        className={`px-3 py-2 rounded-lg border transition-colors orbitron text-xs font-semibold text-left ${filters.categories.includes(category)
+                          ? "bg-black text-white border-black"
+                          : "bg-white text-black border-gray-300 hover:bg-gray-50"
+                          }`}
                       >
                         {category}
                       </button>
@@ -470,92 +537,142 @@ export default function UpcomingProductsPage() {
             <span className="ml-2 orbitron">Chargement des produits...</span>
           </div>
         ) : products.length > 0 ? (
-          <motion.div
-            className={
-              viewMode === "grid"
-                ? "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                : "space-y-4"
-            }
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {products.map((product) => (
-              <motion.div
-                key={product.id}
-                variants={itemVariants}
-                className={viewMode === "list" ? "flex gap-4" : ""}
-              >
-                <Link
-                  href={`/products/${product.slug}`}
-                  className="block h-full"
+          <>
+            <div
+              className={
+                viewMode === "grid"
+                  ? "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                  : "space-y-4"
+              }
+
+            >
+              {paginatedProducts.map((product) => (
+                <div
+                  key={product.id}
+
+                  className={viewMode === "list" ? "flex gap-4" : ""}
                 >
-                  <div className="relative h-full group">
-                    <ProductCard
-                      {...product}
-                      currency="FCFA"
-                      className="cursor-pointer"
-                    />
-                    {/* Availability Badge - Balanced */}
-                    {product.availabilityDate && (
-                      <div className="absolute top-3 right-3 bg-gradient-to-br from-orange-500/95 to-orange-600/95 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-[10px] font-semibold orbitron z-10 shadow-lg border border-white/20 max-w-[140px]">
-                        <div className="flex items-center gap-1.5 mb-1.5">
-                          <Clock className="size-3" />
-                          <span className="text-[9px]">Disponible le</span>
-                        </div>
-                        <div className="text-[9px] mb-2 leading-tight font-medium">
-                          {formatDate(product.availabilityDate)}
-                        </div>
-                        {(() => {
-                          const date = typeof product.availabilityDate === "string" 
-                            ? new Date(product.availabilityDate) 
-                            : product.availabilityDate;
-                          const dateTime = product.availabilityTime 
-                            ? `${date.toISOString().split("T")[0]}T${product.availabilityTime}:00`
-                            : date.toISOString();
-                          const now = new Date().getTime();
-                          const target = new Date(dateTime).getTime();
-                          const diff = target - now;
-                          if (diff <= 0) {
+                  <Link
+                    href={`/products/${product.slug}`}
+                    className="block h-full"
+                  >
+                    <div className="relative h-full group">
+                      <ProductCard
+                        {...product}
+                        currency="FCFA"
+                        className="cursor-pointer"
+                      />
+                      {/* Availability Badge - Balanced */}
+                      {product.availabilityDate && (
+                        <div className="absolute top-3 right-3 bg-gradient-to-br from-orange-500/95 to-orange-600/95 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-[10px] font-semibold orbitron z-10 shadow-lg border border-white/20 max-w-[140px]">
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <Clock className="size-3" />
+                            <span className="text-[9px]">Disponible le</span>
+                          </div>
+                          <div className="text-[9px] mb-2 leading-tight font-medium">
+                            {formatDate(product.availabilityDate)}
+                          </div>
+                          {(() => {
+                            const date = typeof product.availabilityDate === "string"
+                              ? new Date(product.availabilityDate)
+                              : product.availabilityDate;
+                            const dateTime = product.availabilityTime
+                              ? `${date.toISOString().split("T")[0]}T${product.availabilityTime}:00`
+                              : date.toISOString();
+                            const now = new Date().getTime();
+                            const target = new Date(dateTime).getTime();
+                            const diff = target - now;
+                            if (diff <= 0) {
+                              return (
+                                <div className="text-[9px] text-green-100 font-bold">
+                                  Disponible maintenant !
+                                </div>
+                              );
+                            }
+                            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                             return (
-                              <div className="text-[9px] text-green-100 font-bold">
-                                Disponible maintenant !
+                              <div className="flex items-center gap-1.5 text-[9px] pt-1.5 border-t border-white/30">
+                                {days > 0 && (
+                                  <>
+                                    <span className="font-bold">{days}</span>
+                                    <span className="text-white/80">j</span>
+                                  </>
+                                )}
+                                {hours > 0 && (
+                                  <>
+                                    <span className="font-bold">{String(hours).padStart(2, '0')}</span>
+                                    <span className="text-white/80">h</span>
+                                  </>
+                                )}
+                                {days === 0 && (
+                                  <>
+                                    <span className="font-bold">{String(minutes).padStart(2, '0')}</span>
+                                    <span className="text-white/80">m</span>
+                                  </>
+                                )}
                               </div>
                             );
-                          }
-                          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                          return (
-                            <div className="flex items-center gap-1.5 text-[9px] pt-1.5 border-t border-white/30">
-                              {days > 0 && (
-                                <>
-                                  <span className="font-bold">{days}</span>
-                                  <span className="text-white/80">j</span>
-                                </>
-                              )}
-                              {hours > 0 && (
-                                <>
-                                  <span className="font-bold">{String(hours).padStart(2, '0')}</span>
-                                  <span className="text-white/80">h</span>
-                                </>
-                              )}
-                              {days === 0 && (
-                                <>
-                                  <span className="font-bold">{String(minutes).padStart(2, '0')}</span>
-                                  <span className="text-white/80">m</span>
-                                </>
-                              )}
-                            </div>
-                          );
-                        })()}
-                      </div>
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage <= 1}
+                    className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors"
+                    aria-label="Page précédente"
+                  >
+                    <ChevronLeft className="size-5" />
+                  </button>
+                  <div className="flex items-center gap-1">
+                    {pageNumbers.map((page, idx) =>
+                      page === "ellipsis" ? (
+                        <span
+                          key={`ellipsis-${idx}`}
+                          className="px-2 text-gray-400"
+                        >
+                          …
+                        </span>
+                      ) : (
+                        <button
+                          key={page}
+                          onClick={() => goToPage(page)}
+                          className={`min-w-9 py-2 px-2 rounded-lg border transition-colors orbitron text-sm font-semibold ${currentPage === page
+                            ? "bg-black text-white border-black"
+                            : "border-gray-300 hover:bg-gray-50"
+                            }`}
+                        >
+                          {page}
+                        </button>
+                      )
                     )}
                   </div>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
+                  <button
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                    className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors"
+                    aria-label="Page suivante"
+                  >
+                    <ChevronRight className="size-5" />
+                  </button>
+                </div>
+                <span className="text-sm text-gray-600 orbitron">
+                  Page {currentPage} sur {totalPages}
+                </span>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-16">
             <Clock className="size-16 mx-auto text-gray-300 mb-4" />

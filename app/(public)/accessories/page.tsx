@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
+
 import { ProductCard } from "@/components/ui/product-card-2";
 import Link from "next/link";
 import {
@@ -12,6 +12,8 @@ import {
   X,
   Tag,
   Loader2,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
@@ -74,6 +76,11 @@ const transformProduct = (product: ApiProduct): Product => {
   };
 };
 
+
+const ITEMS_PER_PAGE_OPTIONS = [12, 24, 48] as const;
+const DEFAULT_ITEMS_PER_PAGE = 12;
+
+
 export default function AccessoriesPage() {
   // Fetch all categories to find "accessoires"
   const { data: categories = [], isLoading: isLoadingCategories } =
@@ -105,6 +112,8 @@ export default function AccessoriesPage() {
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(DEFAULT_ITEMS_PER_PAGE);
   const [filters, setFilters] = useState<FilterState>({
     priceRange: "all",
     search: "",
@@ -112,29 +121,7 @@ export default function AccessoriesPage() {
 
   const isLoading = isLoadingCategories || isLoadingProducts;
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.05,
-      },
-    },
-  };
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring" as const,
-        stiffness: 100,
-        damping: 10,
-      },
-    },
-  };
 
   // Filter and sort products
   useEffect(() => {
@@ -188,6 +175,41 @@ export default function AccessoriesPage() {
 
     setProducts(sorted);
   }, [sortBy, filters, allProducts]);
+
+  // Reset to page 1 when filters or sort change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortBy, filters]);
+
+
+  const totalPages = Math.max(1, Math.ceil(products.length / itemsPerPage));
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return products.slice(start, start + itemsPerPage);
+  }, [products, currentPage, itemsPerPage]);
+
+  // Page numbers to show (with ellipsis if many pages)
+  const pageNumbers = useMemo((): (number | "ellipsis")[] => {
+    const delta = 2;
+    const range: number[] = [];
+    const rangeWithDots: (number | "ellipsis")[] = [];
+    let prevNum: number | undefined;
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+        range.push(i);
+      }
+    }
+    for (const i of range) {
+      if (prevNum !== undefined && i - prevNum !== 1) rangeWithDots.push("ellipsis");
+      rangeWithDots.push(i);
+      prevNum = i;
+    }
+    return rangeWithDots;
+  }, [currentPage, totalPages]);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
 
   const resetFilters = () => {
     setFilters({
@@ -280,22 +302,20 @@ export default function AccessoriesPage() {
             <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-1">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-2 rounded transition-colors ${
-                  viewMode === "grid"
-                    ? "bg-black text-white"
-                    : "hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded transition-colors ${viewMode === "grid"
+                  ? "bg-black text-white"
+                  : "hover:bg-gray-100"
+                  }`}
                 aria-label="Vue grille"
               >
                 <Grid className="size-4" />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 rounded transition-colors ${
-                  viewMode === "list"
-                    ? "bg-black text-white"
-                    : "hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded transition-colors ${viewMode === "list"
+                  ? "bg-black text-white"
+                  : "hover:bg-gray-100"
+                  }`}
                 aria-label="Vue liste"
               >
                 <List className="size-4" />
@@ -375,11 +395,10 @@ export default function AccessoriesPage() {
                           priceRange: range.value,
                         }))
                       }
-                      className={`px-3 py-1.5 rounded-lg border transition-colors orbitron text-xs font-semibold ${
-                        filters.priceRange === range.value
-                          ? "bg-black text-white border-black"
-                          : "bg-white text-black border-gray-300 hover:bg-gray-50"
-                      }`}
+                      className={`px-3 py-1.5 rounded-lg border transition-colors orbitron text-xs font-semibold ${filters.priceRange === range.value
+                        ? "bg-black text-white border-black"
+                        : "bg-white text-black border-gray-300 hover:bg-gray-50"
+                        }`}
                     >
                       {range.label}
                     </button>
@@ -397,35 +416,86 @@ export default function AccessoriesPage() {
             <span className="ml-2 orbitron">Chargement des accessoires...</span>
           </div>
         ) : products.length > 0 ? (
-          <motion.div
-            className={
-              viewMode === "grid"
-                ? "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                : "space-y-4"
-            }
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {products.map((product) => (
-              <motion.div
-                key={product.id}
-                variants={itemVariants}
-                className={viewMode === "list" ? "flex gap-4" : ""}
-              >
-                <Link
-                  href={`/products/${product.slug}`}
-                  className="block h-full"
+          <>
+            <div
+              className={
+                viewMode === "grid"
+                  ? "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                  : "space-y-4"
+              }
+
+            >
+              {products.map((product) => (
+                <div
+                  key={product.id}
+
+                  className={viewMode === "list" ? "flex gap-4" : ""}
                 >
-                  <ProductCard
-                    {...product}
-                    currency="FCFA"
-                    className="cursor-pointer"
-                  />
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
+                  <Link
+                    href={`/products/${product.slug}`}
+                    className="block h-full"
+                  >
+                    <ProductCard
+                      {...product}
+                      currency="FCFA"
+                      className="cursor-pointer"
+                    />
+                  </Link>
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage <= 1}
+                    className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors"
+                    aria-label="Page précédente"
+                  >
+                    <ChevronLeft className="size-5" />
+                  </button>
+                  <div className="flex items-center gap-1">
+                    {pageNumbers.map((page, idx) =>
+                      page === "ellipsis" ? (
+                        <span
+                          key={`ellipsis-${idx}`}
+                          className="px-2 text-gray-400"
+                        >
+                          …
+                        </span>
+                      ) : (
+                        <button
+                          key={page}
+                          onClick={() => goToPage(page)}
+                          className={`min-w-9 py-2 px-2 rounded-lg border transition-colors orbitron text-sm font-semibold ${currentPage === page
+                            ? "bg-black text-white border-black"
+                            : "border-gray-300 hover:bg-gray-50"
+                            }`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    )}
+                  </div>
+                  <button
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                    className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors"
+                    aria-label="Page suivante"
+                  >
+                    <ChevronRight className="size-5" />
+                  </button>
+                </div>
+                <span className="text-sm text-gray-600 orbitron">
+                  Page {currentPage} sur {totalPages}
+                </span>
+              </div>
+
+            )}
+          </>
         ) : (
           <div className="text-center py-16">
             <p className="text-xl text-gray-600 orbitron mb-4">

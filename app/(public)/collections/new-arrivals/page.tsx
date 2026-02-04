@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { ProductCard } from "@/components/ui/product-card-2";
 import Link from "next/link";
 import {
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Grid,
   List,
   SlidersHorizontal,
@@ -51,6 +53,10 @@ interface FilterState {
   dateRange: string;
 }
 
+// Pagination
+const ITEMS_PER_PAGE_OPTIONS = [12, 24, 48] as const;
+const DEFAULT_ITEMS_PER_PAGE = 12;
+
 // Couleurs disponibles (sera dynamique basé sur les produits)
 const colorMap: Record<string, string> = {
   Noir: "#000000",
@@ -85,9 +91,8 @@ const getDiscountPercentage = (price: number, originalPrice: number | null) => {
 const extractColor = (product: ApiProduct): string => {
   // Try to extract color from variant names or description
   const colorKeywords = Object.keys(colorMap);
-  const searchText = `${product.name} ${
-    product.description || ""
-  }`.toLowerCase();
+  const searchText = `${product.name} ${product.description || ""
+    }`.toLowerCase();
 
   for (const color of colorKeywords) {
     if (searchText.includes(color.toLowerCase())) {
@@ -157,6 +162,8 @@ export default function NewArrivalsPage() {
     categories: [],
     dateRange: "all",
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(DEFAULT_ITEMS_PER_PAGE);
 
   // Animation variants
   const containerVariants = {
@@ -270,6 +277,35 @@ export default function NewArrivalsPage() {
     setProducts(sorted);
   }, [sortBy, filters, allProducts]);
 
+  // Remettre à la page 1 quand filtres ou tri changent
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, sortBy]);
+
+  // Pagination : produits de la page courante
+  const totalFiltered = products.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / itemsPerPage));
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedProducts = products.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
+  const getPageNumbers = () => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const pages: (number | "ellipsis")[] = [];
+    if (currentPage <= 4) {
+      pages.push(1, 2, 3, 4, 5, "ellipsis", totalPages);
+    } else if (currentPage >= totalPages - 3) {
+      pages.push(1, "ellipsis", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+    } else {
+      pages.push(1, "ellipsis", currentPage - 1, currentPage, currentPage + 1, "ellipsis", totalPages);
+    }
+    return pages;
+  };
+
   const toggleColor = (color: string) => {
     setFilters((prev) => ({
       ...prev,
@@ -329,7 +365,7 @@ export default function NewArrivalsPage() {
         {/* Filters and Sort Bar */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 pb-6 border-b">
           {/* Left: Filter button and results count */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
               className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors orbitron text-sm font-semibold relative"
@@ -343,8 +379,32 @@ export default function NewArrivalsPage() {
               )}
             </button>
             <span className="text-sm text-gray-600 orbitron">
-              {products.length} produit{products.length > 1 ? "s" : ""}
+              {totalFiltered} produit{totalFiltered > 1 ? "s" : ""}
+              {totalFiltered > 0 && (
+                <span className="text-gray-500">
+                  {" "}(page {currentPage}/{totalPages})
+                </span>
+              )}
             </span>
+            {totalFiltered > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 orbitron">Afficher :</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black orbitron text-sm cursor-pointer"
+                >
+                  {ITEMS_PER_PAGE_OPTIONS.map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Right: Sort and View mode */}
@@ -368,22 +428,20 @@ export default function NewArrivalsPage() {
             <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-1">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-2 rounded transition-colors ${
-                  viewMode === "grid"
-                    ? "bg-black text-white"
-                    : "hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded transition-colors ${viewMode === "grid"
+                  ? "bg-black text-white"
+                  : "hover:bg-gray-100"
+                  }`}
                 aria-label="Vue grille"
               >
                 <Grid className="size-4" />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 rounded transition-colors ${
-                  viewMode === "list"
-                    ? "bg-black text-white"
-                    : "hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded transition-colors ${viewMode === "list"
+                  ? "bg-black text-white"
+                  : "hover:bg-gray-100"
+                  }`}
                 aria-label="Vue liste"
               >
                 <List className="size-4" />
@@ -395,10 +453,7 @@ export default function NewArrivalsPage() {
         {/* Filter Panel */}
         <AnimatePresence>
           {isFilterOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
+            <div
               className="mb-8 pb-6 border-b overflow-hidden"
             >
               <div className="space-y-6">
@@ -457,12 +512,12 @@ export default function NewArrivalsPage() {
                         {filters.dateRange === "last-week"
                           ? "Dernière semaine"
                           : filters.dateRange === "last-month"
-                          ? "Dernier mois"
-                          : filters.dateRange === "last-3-months"
-                          ? "3 derniers mois"
-                          : filters.dateRange === "last-6-months"
-                          ? "6 derniers mois"
-                          : "Dernière année"}
+                            ? "Dernier mois"
+                            : filters.dateRange === "last-3-months"
+                              ? "3 derniers mois"
+                              : filters.dateRange === "last-6-months"
+                                ? "6 derniers mois"
+                                : "Dernière année"}
                         <button
                           onClick={() =>
                             setFilters((prev) => ({
@@ -509,11 +564,10 @@ export default function NewArrivalsPage() {
                               priceRange: range.value,
                             }))
                           }
-                          className={`px-3 py-1.5 rounded-lg border transition-colors orbitron text-xs font-semibold ${
-                            filters.priceRange === range.value
-                              ? "bg-black text-white border-black"
-                              : "bg-white text-black border-gray-300 hover:bg-gray-50"
-                          }`}
+                          className={`px-3 py-1.5 rounded-lg border transition-colors orbitron text-xs font-semibold ${filters.priceRange === range.value
+                            ? "bg-black text-white border-black"
+                            : "bg-white text-black border-gray-300 hover:bg-gray-50"
+                            }`}
                         >
                           {range.label}
                         </button>
@@ -522,37 +576,7 @@ export default function NewArrivalsPage() {
                   </div>
 
                   {/* Couleur */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Palette className="size-4" />
-                      <h3 className="font-bold orbitron text-base">Couleur</h3>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {availableColors.map((color) => (
-                        <button
-                          key={color}
-                          onClick={() => toggleColor(color)}
-                          className={`relative px-3 py-1.5 rounded-lg border-2 transition-all orbitron text-xs font-semibold ${
-                            filters.colors.includes(color)
-                              ? "border-black bg-gray-100"
-                              : "border-gray-300 hover:border-gray-400"
-                          }`}
-                        >
-                          <span className="flex items-center gap-2">
-                            <span
-                              className="w-4 h-4 rounded-full border border-gray-300"
-                              style={{
-                                backgroundColor: colorMap[color],
-                                borderColor:
-                                  color === "Blanc" ? "#ccc" : "transparent",
-                              }}
-                            />
-                            {color}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+
 
                   {/* Catégorie */}
                   <div className="space-y-3">
@@ -567,11 +591,10 @@ export default function NewArrivalsPage() {
                         <button
                           key={category}
                           onClick={() => toggleCategory(category)}
-                          className={`px-3 py-2 rounded-lg border transition-colors orbitron text-xs font-semibold text-left ${
-                            filters.categories.includes(category)
-                              ? "bg-black text-white border-black"
-                              : "bg-white text-black border-gray-300 hover:bg-gray-50"
-                          }`}
+                          className={`px-3 py-2 rounded-lg border transition-colors orbitron text-xs font-semibold text-left ${filters.categories.includes(category)
+                            ? "bg-black text-white border-black"
+                            : "bg-white text-black border-gray-300 hover:bg-gray-50"
+                            }`}
                         >
                           {category}
                         </button>
@@ -608,11 +631,10 @@ export default function NewArrivalsPage() {
                               dateRange: option.value,
                             }))
                           }
-                          className={`px-3 py-2 rounded-lg border transition-colors orbitron text-xs font-semibold text-left ${
-                            filters.dateRange === option.value
-                              ? "bg-black text-white border-black"
-                              : "bg-white text-black border-gray-300 hover:bg-gray-50"
-                          }`}
+                          className={`px-3 py-2 rounded-lg border transition-colors orbitron text-xs font-semibold text-left ${filters.dateRange === option.value
+                            ? "bg-black text-white border-black"
+                            : "bg-white text-black border-gray-300 hover:bg-gray-50"
+                            }`}
                         >
                           {option.label}
                         </button>
@@ -621,7 +643,7 @@ export default function NewArrivalsPage() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
         </AnimatePresence>
 
@@ -632,35 +654,84 @@ export default function NewArrivalsPage() {
             <span className="ml-2 orbitron">Chargement des produits...</span>
           </div>
         ) : products.length > 0 ? (
-          <motion.div
-            className={
-              viewMode === "grid"
-                ? "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                : "space-y-4"
-            }
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {products.map((product, index) => (
-              <motion.div
-                key={product.id}
-                variants={itemVariants}
-                className={viewMode === "list" ? "flex gap-4" : ""}
-              >
-                <Link
-                  href={`/products/${product.slug}`}
-                  className="block h-full"
+          <>
+            <div
+              className={
+                viewMode === "grid"
+                  ? "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                  : "space-y-4"
+              }
+
+            >
+              {paginatedProducts.map((product) => (
+                <div
+                  key={product.id}
+
+                  className={viewMode === "list" ? "flex gap-4" : ""}
                 >
-                  <ProductCard
-                    {...product}
-                    currency="FCFA"
-                    className="cursor-pointer"
-                  />
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
+                  <Link
+                    href={`/products/${product.slug}`}
+                    className="block h-full"
+                  >
+                    <ProductCard
+                      {...product}
+                      currency="FCFA"
+                      className="cursor-pointer"
+                    />
+                  </Link>
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <nav
+                className="mt-10 flex flex-wrap items-center justify-center gap-2"
+                aria-label="Pagination"
+              >
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-1 px-3 py-2 border-2 border-gray-200 rounded-lg orbitron font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 hover:border-gray-300 transition-colors"
+                  aria-label="Page précédente"
+                >
+                  <ChevronLeft className="size-5" />
+                  Précédent
+                </button>
+                <div className="flex items-center gap-1">
+                  {getPageNumbers().map((page, i) =>
+                    page === "ellipsis" ? (
+                      <span key={`ellipsis-${i}`} className="px-2 text-gray-400">
+                        …
+                      </span>
+                    ) : (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`min-w-10 py-2 px-2 rounded-lg orbitron font-semibold transition-colors ${currentPage === page
+                          ? "bg-black text-white"
+                          : "border-2 border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                          }`}
+                        aria-label={`Page ${page}`}
+                        aria-current={currentPage === page ? "page" : undefined}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
+                </div>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-1 px-3 py-2 border-2 border-gray-200 rounded-lg orbitron font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 hover:border-gray-300 transition-colors"
+                  aria-label="Page suivante"
+                >
+                  Suivant
+                  <ChevronRight className="size-5" />
+                </button>
+              </nav>
+            )}
+          </>
         ) : (
           <div className="text-center py-16">
             <p className="text-xl text-gray-600 orbitron mb-4">
@@ -675,14 +746,6 @@ export default function NewArrivalsPage() {
           </div>
         )}
 
-        {/* Load More Button (optional) */}
-        {products.length >= 12 && (
-          <div className="text-center mt-12">
-            <button className="px-8 py-3 border-2 border-black text-black rounded-lg hover:bg-black hover:text-white transition-colors font-bold orbitron uppercase">
-              Charger plus
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

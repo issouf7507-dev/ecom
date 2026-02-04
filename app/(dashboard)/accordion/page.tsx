@@ -23,6 +23,7 @@ import {
   CardTitle,
   CardDescription,
   CardAction,
+  CardContent,
 } from "@/components/ui/card";
 import {
   Table,
@@ -313,7 +314,7 @@ export default function AccordionPage() {
             {items.length > 1 ? "s" : ""}
           </CardDescription>
         </CardHeader>
-        <CardAction>
+        <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="size-6 animate-spin" />
@@ -330,120 +331,120 @@ export default function AccordionPage() {
               </Button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[50px]">Ordre</TableHead>
-                    <TableHead className="w-[100px]">Image</TableHead>
-                    <TableHead>Titre</TableHead>
-                    <TableHead>Lien</TableHead>
-                    <TableHead className="w-[100px]">Statut</TableHead>
-                    <TableHead className="w-[150px] text-right">
-                      Actions
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {items.map((item, index) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <button
-                            onClick={() => handleMoveOrder(item, "up")}
-                            disabled={index === 0}
-                            className="disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <ArrowUp className="size-4" />
-                          </button>
-                          <span className="text-sm font-semibold">
-                            {item.sortOrder}
-                          </span>
-                          <button
-                            onClick={() => handleMoveOrder(item, "down")}
-                            disabled={index === items.length - 1}
-                            className="disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <ArrowDown className="size-4" />
-                          </button>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="relative w-16 h-16 rounded overflow-hidden">
-                          <Image
-                            src={item.image}
-                            alt={item.alt || item.title}
-                            fill
-                            className="object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src =
-                                "/images/placeholder.png";
-                            }}
-                          />
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium">{item.title}</TableCell>
-                      <TableCell>
-                        {item.link ? (
-                          <a
-                            href={item.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline text-sm"
-                          >
-                            {item.linkText || item.link}
-                          </a>
-                        ) : (
-                          "-"
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          className={
-                            item.isActive
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
-                          }
+
+            <Table className="w-full">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="">Ordre</TableHead>
+                  <TableHead className="">Image</TableHead>
+                  <TableHead>Titre</TableHead>
+                  <TableHead>Lien</TableHead>
+                  <TableHead className="">Statut</TableHead>
+                  <TableHead className=" text-right">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((item, index) => (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <button
+                          onClick={() => handleMoveOrder(item, "up")}
+                          disabled={index === 0}
+                          className="disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {item.isActive ? "Actif" : "Inactif"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleToggleActive(item)}
-                          >
-                            {item.isActive ? (
-                              <EyeOff className="size-4" />
-                            ) : (
-                              <Eye className="size-4" />
-                            )}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(item)}
-                          >
-                            <Edit className="size-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setDeleteConfirm(item.id)}
-                          >
-                            <Trash2 className="size-4 text-red-600" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                          <ArrowUp className="size-4" />
+                        </button>
+                        <span className="text-sm font-semibold">
+                          {item.sortOrder}
+                        </span>
+                        <button
+                          onClick={() => handleMoveOrder(item, "down")}
+                          disabled={index === items.length - 1}
+                          className="disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <ArrowDown className="size-4" />
+                        </button>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="relative w-16 h-16 rounded overflow-hidden">
+                        <Image
+                          src={item.image}
+                          alt={item.alt || item.title}
+                          fill
+                          className="object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src =
+                              "/images/placeholder.png";
+                          }}
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">{item.title}</TableCell>
+                    <TableCell>
+                      {item.link ? (
+                        <a
+                          href={item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline text-sm"
+                        >
+                          {item.linkText || item.link}
+                        </a>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={
+                          item.isActive
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
+                        }
+                      >
+                        {item.isActive ? "Actif" : "Inactif"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleToggleActive(item)}
+                        >
+                          {item.isActive ? (
+                            <EyeOff className="size-4" />
+                          ) : (
+                            <Eye className="size-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(item)}
+                        >
+                          <Edit className="size-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setDeleteConfirm(item.id)}
+                        >
+                          <Trash2 className="size-4 text-red-600" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+
           )}
-        </CardAction>
+        </CardContent>
       </Card>
 
       {/* Create/Edit Dialog */}

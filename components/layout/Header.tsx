@@ -41,6 +41,13 @@ import {
 
 const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "";
 
+const formatFCFA = (amount: number) =>
+  new Intl.NumberFormat("fr-FR", {
+    style: "decimal",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+
 export function Header() {
   const router = useRouter();
   const {
@@ -368,7 +375,7 @@ export function Header() {
                             {item.product.name}
                           </h3>
                           <p className="text-gray-600 text-sm sm:text-base mb-2 sm:mb-3">
-                            {item.product.price.toFixed(2)} FCFA
+                            {formatFCFA(item.product.price)} FCFA
                           </p>
 
                           {/* Quantity Controls */}
@@ -432,7 +439,7 @@ export function Header() {
                   {/* Total */}
                   <div className="flex items-center justify-between text-base sm:text-lg font-bold">
                     <span>Total</span>
-                    <span>£{total.toFixed(2)}</span>
+                    <span>{formatFCFA(total)} FCFA</span>
                   </div>
 
                   {/* Actions */}
@@ -514,7 +521,7 @@ export function Header() {
               </div>
               <div className="flex justify-between text-sm sm:text-base font-bold border-t pt-2 sm:pt-3">
                 <span>Total</span>
-                <span>£{total.toFixed(2)}</span>
+                <span>{formatFCFA(total)} FCFA</span>
               </div>
               {checkoutError && (
                 <p className="text-xs sm:text-sm text-destructive">{checkoutError}</p>

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { Status } from "@prisma/client";
+import type { Prisma } from "../../../generated/prisma";
 import type {
   Product,
   CreateProductInput,
@@ -166,61 +167,63 @@ export class ProductRepository {
   }
 
   async update(id: string, data: UpdateProductInput): Promise<any> {
+    const updateData: Prisma.ProductUncheckedUpdateInput = {
+      ...(data.name && { name: data.name }),
+      ...(data.slug && { slug: data.slug }),
+      ...(data.description !== undefined && {
+        description: data.description,
+      }),
+      ...(data.shortDescription !== undefined && {
+        shortDescription: data.shortDescription,
+      }),
+      ...(data.barcode !== undefined && { barcode: data.barcode }),
+      ...(data.price !== undefined && { price: data.price }),
+      ...(data.compareAtPrice !== undefined && {
+        compareAtPrice: data.compareAtPrice,
+      }),
+      ...(data.costPrice !== undefined && { costPrice: data.costPrice }),
+      ...(data.taxRate !== undefined && { taxRate: data.taxRate }),
+      ...(data.status && { status: data.status as Status }),
+      ...(data.featured !== undefined && { featured: data.featured }),
+      ...(data.isNewArrival !== undefined && {
+        isNewArrival: data.isNewArrival,
+      }),
+      ...(data.releaseDate !== undefined && {
+        releaseDate: data.releaseDate,
+      }),
+      ...(data.isPreOrder !== undefined && { isPreOrder: data.isPreOrder }),
+      ...(data.availabilityDate !== undefined && {
+        availabilityDate: data.availabilityDate,
+      }),
+      ...(data.availabilityTime !== undefined && {
+        availabilityTime: data.availabilityTime,
+      }),
+      ...(data.trackInventory !== undefined && {
+        trackInventory: data.trackInventory,
+      }),
+      ...(data.stockQuantity !== undefined && {
+        stockQuantity: data.stockQuantity,
+      }),
+      ...(data.lowStockThreshold !== undefined && {
+        lowStockThreshold: data.lowStockThreshold,
+      }),
+      ...(data.weight !== undefined && { weight: data.weight }),
+      ...(data.length !== undefined && { length: data.length }),
+      ...(data.width !== undefined && { width: data.width }),
+      ...(data.height !== undefined && { height: data.height }),
+      ...(data.metaTitle !== undefined && { metaTitle: data.metaTitle }),
+      ...(data.metaDescription !== undefined && {
+        metaDescription: data.metaDescription,
+      }),
+      ...(data.metaKeywords !== undefined && {
+        metaKeywords: data.metaKeywords,
+      }),
+      ...(data.categoryId !== undefined && { categoryId: data.categoryId }),
+    };
+
     return prisma.product.update({
       where: { id },
-      data: {
-        ...(data.name && { name: data.name }),
-        ...(data.slug && { slug: data.slug }),
-        ...(data.description !== undefined && {
-          description: data.description,
-        }),
-        ...(data.shortDescription !== undefined && {
-          shortDescription: data.shortDescription,
-        }),
-        ...(data.barcode !== undefined && { barcode: data.barcode }),
-        ...(data.price !== undefined && { price: data.price }),
-        ...(data.compareAtPrice !== undefined && {
-          compareAtPrice: data.compareAtPrice,
-        }),
-        ...(data.costPrice !== undefined && { costPrice: data.costPrice }),
-        ...(data.taxRate !== undefined && { taxRate: data.taxRate }),
-        ...(data.status && { status: data.status }),
-        ...(data.featured !== undefined && { featured: data.featured }),
-        ...(data.isNewArrival !== undefined && {
-          isNewArrival: data.isNewArrival,
-        }),
-        ...(data.releaseDate !== undefined && {
-          releaseDate: data.releaseDate,
-        }),
-        ...(data.isPreOrder !== undefined && { isPreOrder: data.isPreOrder }),
-        ...(data.availabilityDate !== undefined && {
-          availabilityDate: data.availabilityDate,
-        }),
-        ...(data.availabilityTime !== undefined && {
-          availabilityTime: data.availabilityTime,
-        }),
-        ...(data.trackInventory !== undefined && {
-          trackInventory: data.trackInventory,
-        }),
-        ...(data.stockQuantity !== undefined && {
-          stockQuantity: data.stockQuantity,
-        }),
-        ...(data.lowStockThreshold !== undefined && {
-          lowStockThreshold: data.lowStockThreshold,
-        }),
-        ...(data.weight !== undefined && { weight: data.weight }),
-        ...(data.length !== undefined && { length: data.length }),
-        ...(data.width !== undefined && { width: data.width }),
-        ...(data.height !== undefined && { height: data.height }),
-        ...(data.metaTitle !== undefined && { metaTitle: data.metaTitle }),
-        ...(data.metaDescription !== undefined && {
-          metaDescription: data.metaDescription,
-        }),
-        ...(data.metaKeywords !== undefined && {
-          metaKeywords: data.metaKeywords,
-        }),
-        ...(data.categoryId !== undefined && { categoryId: data.categoryId }),
-      },
+      data: updateData,
       include: {
         category: {
           select: {

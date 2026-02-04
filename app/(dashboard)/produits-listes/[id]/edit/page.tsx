@@ -123,6 +123,11 @@ export default function EditProductPage() {
         : "";
       const availabilityTime = product.availabilityTime || "";
 
+      const categoryId =
+        product.categoryId ??
+        (product as { category?: { id: string } }).category?.id ??
+        "Aucune catégorie";
+
       setFormData({
         name: product.name,
         slug: product.slug,
@@ -138,7 +143,7 @@ export default function EditProductPage() {
         stockQuantity: product.stockQuantity.toString(),
         lowStockThreshold: product.lowStockThreshold.toString(),
         status: product.status ?? Status.ACTIVE,
-        categoryId: product.categoryId || "Aucune catégorie",
+        categoryId,
         weight: product.weight?.toString() || "",
         length: product.length?.toString() || "",
         width: product.width?.toString() || "",
@@ -147,6 +152,8 @@ export default function EditProductPage() {
         availabilityTime,
         isPreOrder: product.isPreOrder,
       });
+
+
 
       // Load existing images
       if (product.images && product.images.length > 0) {
@@ -159,6 +166,8 @@ export default function EditProductPage() {
       }
     }
   }, [product]);
+  // console.log("formData.categoryId", formData.categoryId);
+
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -781,12 +790,12 @@ export default function EditProductPage() {
             {/* Categories */}
             <Card>
               <CardHeader>
-                <CardTitle>Catégorie</CardTitle>
+                <CardTitle>Catégorie {product.categoryId}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-2">
                   <Select
-                    value={formData.categoryId || "Aucune catégorie"}
+                    value={product.categoryId || "Aucune catégorie"}
                     onValueChange={(value) =>
                       handleSelectChange("categoryId", value)
                     }

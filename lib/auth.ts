@@ -21,6 +21,9 @@ export const auth = betterAuth({
     updateAge: 60 * 60 * 24, // 1 day
   },
   user: {
+    additionalFields: {
+      role: { type: "string", input: false },
+    },
     changeEmail: {
       enabled: true,
     },

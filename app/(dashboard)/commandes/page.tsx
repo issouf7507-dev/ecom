@@ -213,7 +213,12 @@ export default function OrdersPage() {
   };
 
   const filteredOrders = orders;
-
+  const formatFCFA = (amount: number) =>
+    new Intl.NumberFormat("fr-FR", {
+      style: "decimal",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -249,10 +254,7 @@ export default function OrdersPage() {
             <CardDescription>Revenus Total</CardDescription>
             <CardTitle className="font-semibold font-display text-2xl lg:text-3xl">
               {stats
-                ? `£${stats.totalRevenue.toLocaleString("fr-FR", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}`
+                ? `${formatFCFA(stats.totalRevenue)} FCFA`
                 : "-"}
             </CardTitle>
           </CardHeader>
@@ -338,228 +340,226 @@ export default function OrdersPage() {
                 Erreur lors du chargement des commandes.
               </div>
             ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-muted-foreground">
-                    <Checkbox
-                      checked={
-                        selectedRows.length === orders.length &&
-                        orders.length > 0
-                      }
-                      onCheckedChange={handleSelectAll}
-                      aria-label="Select all"
-                    />
-                  </TableHead>
-                  <TableHead className="text-muted-foreground">
-                    <Button variant="ghost" size="sm" className="-ml-3">
-                      ID Commande
-                      <ArrowUpDown className="ml-2 size-3" />
-                    </Button>
-                  </TableHead>
-                  <TableHead className="text-muted-foreground">
-                    Client
-                  </TableHead>
-                  <TableHead className="text-muted-foreground">
-                    Produits
-                  </TableHead>
-                  <TableHead className="text-muted-foreground">
-                    <Button variant="ghost" size="sm" className="-ml-3">
-                      Montant
-                      <ArrowUpDown className="ml-2 size-3" />
-                    </Button>
-                  </TableHead>
-                  <TableHead className="text-muted-foreground">
-                    <Button variant="ghost" size="sm" className="-ml-3">
-                      Statut
-                      <ArrowUpDown className="ml-2 size-3" />
-                    </Button>
-                  </TableHead>
-                  <TableHead className="text-muted-foreground">
-                    Paiement
-                  </TableHead>
-                  <TableHead className="text-muted-foreground">Date</TableHead>
-                  <TableHead className="text-muted-foreground"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOrders.length === 0 ? (
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell
-                      colSpan={10}
-                      className="h-24 text-center text-muted-foreground"
-                    >
-                      Aucune commande trouvée.
-                    </TableCell>
+                    <TableHead className="text-muted-foreground">
+                      <Checkbox
+                        checked={
+                          selectedRows.length === orders.length &&
+                          orders.length > 0
+                        }
+                        onCheckedChange={handleSelectAll}
+                        aria-label="Select all"
+                      />
+                    </TableHead>
+                    <TableHead className="text-muted-foreground">
+                      <Button variant="ghost" size="sm" className="-ml-3">
+                        ID Commande
+                        <ArrowUpDown className="ml-2 size-3" />
+                      </Button>
+                    </TableHead>
+                    <TableHead className="text-muted-foreground">
+                      Client
+                    </TableHead>
+                    <TableHead className="text-muted-foreground">
+                      Produits
+                    </TableHead>
+                    <TableHead className="text-muted-foreground">
+                      <Button variant="ghost" size="sm" className="-ml-3">
+                        Montant
+                        <ArrowUpDown className="ml-2 size-3" />
+                      </Button>
+                    </TableHead>
+                    <TableHead className="text-muted-foreground">
+                      <Button variant="ghost" size="sm" className="-ml-3">
+                        Statut
+                        <ArrowUpDown className="ml-2 size-3" />
+                      </Button>
+                    </TableHead>
+                    <TableHead className="text-muted-foreground">
+                      Paiement
+                    </TableHead>
+                    <TableHead className="text-muted-foreground">Date</TableHead>
+                    <TableHead className="text-muted-foreground"></TableHead>
                   </TableRow>
-                ) : (
-                  filteredOrders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedRows.includes(order.id)}
-                          onCheckedChange={(checked) =>
-                            handleSelectRow(order.id, checked === true)
-                          }
-                          aria-label="Select row"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <code className="text-xs bg-muted px-2 py-1 rounded font-medium">
-                          {order.orderNumber}
-                        </code>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{order.customer}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {order.email}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="max-w-xs">
-                          {order.products.map((product, idx) => (
-                            <div key={idx} className="text-sm">
-                              {product.name} x{product.quantity}
-                            </div>
-                          ))}
-                          {order.products.length > 1 && (
-                            <div className="text-xs text-muted-foreground mt-1">
-                              +{order.products.length - 1} autre(s)
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-semibold">
-                          £{order.total.toFixed(2)}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Select
-                            value={order.status}
-                            onValueChange={(value) =>
-                              handleStatusChange(order.id, value as OrderStatus)
-                            }
-                            disabled={
-                              updateStatusMutation.isPending &&
-                              updateStatusMutation.variables?.id === order.id
-                            }
-                          >
-                            <SelectTrigger className="w-[140px] h-8 border-0 shadow-none bg-transparent hover:bg-muted/50">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {statusOptions.map((opt) => (
-                                <SelectItem key={opt.value} value={opt.value}>
-                                  {opt.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          {updateStatusMutation.isPending &&
-                            updateStatusMutation.variables?.id === order.id && (
-                              <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                            )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Select
-                            value={order.paymentStatus}
-                            onValueChange={(value) =>
-                              handlePaymentStatusChange(order.id, value as PaymentStatus)
-                            }
-                            disabled={
-                              updatePaymentStatusMutation.isPending &&
-                              updatePaymentStatusMutation.variables?.id === order.id
-                            }
-                          >
-                            <SelectTrigger className="w-[160px] h-8 border-0 shadow-none bg-transparent hover:bg-muted/50">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {paymentStatusOptions.map((opt) => (
-                                <SelectItem key={opt.value} value={opt.value}>
-                                  {opt.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          {updatePaymentStatusMutation.isPending &&
-                            updatePaymentStatusMutation.variables?.id === order.id && (
-                              <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                            )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          {formatDate(order.createdAt)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <span className="sr-only">Ouvrir le menu</span>
-                              <Ellipsis className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link
-                                href={`/commandes/${order.id}`}
-                                className="flex items-center"
-                              >
-                                <Eye className="mr-2 size-4" />
-                                Voir les détails
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link
-                                href={`/commandes/${order.id}/edit`}
-                                className="flex items-center"
-                              >
-                                <Edit className="mr-2 size-4" />
-                                Modifier le statut
-                              </Link>
-                            </DropdownMenuItem>
-                            {order.status.toLowerCase() !== "shipped" &&
-                              order.status.toLowerCase() !== "delivered" && (
-                                <DropdownMenuItem>
-                                  <Truck className="mr-2 size-4" />
-                                  Marquer comme expédiée
-                                </DropdownMenuItem>
-                              )}
-                            {order.status.toLowerCase() === "shipped" && (
-                              <DropdownMenuItem>
-                                <CheckCircle className="mr-2 size-4" />
-                                Marquer comme livrée
-                              </DropdownMenuItem>
-                            )}
-                            {order.status.toLowerCase() !== "cancelled" && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem variant="destructive">
-                                  <XCircle className="mr-2 size-4" />
-                                  Annuler la commande
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                </TableHeader>
+                <TableBody>
+                  {filteredOrders.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={10}
+                        className="h-24 text-center text-muted-foreground"
+                      >
+                        Aucune commande trouvée.
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    filteredOrders.map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedRows.includes(order.id)}
+                            onCheckedChange={(checked) =>
+                              handleSelectRow(order.id, checked === true)
+                            }
+                            aria-label="Select row"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <code className="text-xs bg-muted px-2 py-1 rounded font-medium">
+                            {order.orderNumber}
+                          </code>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium text-xs">{order.customer.split(" ")[1]}</div>
+
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="max-w-xs">
+                            {order.products.map((product, idx) => (
+                              <div key={idx} className="text-xs">
+                                {product.name.length > 20 ? product.name.slice(0, 20) + "..." : product.name} x{product.quantity}
+                              </div>
+                            ))}
+                            {order.products.length > 1 && (
+                              <div className="text-xs text-muted-foreground mt-1">
+                                +{order.products.length - 1} autre(s)
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-semibold text-xs">
+                            {formatFCFA(order.total)} FCFA
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Select
+                              value={order.status}
+                              onValueChange={(value) =>
+                                handleStatusChange(order.id, value as OrderStatus)
+                              }
+                              disabled={
+                                updateStatusMutation.isPending &&
+                                updateStatusMutation.variables?.id === order.id
+                              }
+                            >
+                              <SelectTrigger className="w-[140px] h-8 border-0 shadow-none bg-transparent hover:bg-muted/50">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {statusOptions.map((opt) => (
+                                  <SelectItem key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {updateStatusMutation.isPending &&
+                              updateStatusMutation.variables?.id === order.id && (
+                                <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                              )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Select
+                              value={order.paymentStatus}
+                              onValueChange={(value) =>
+                                handlePaymentStatusChange(order.id, value as PaymentStatus)
+                              }
+                              disabled={
+                                updatePaymentStatusMutation.isPending &&
+                                updatePaymentStatusMutation.variables?.id === order.id
+                              }
+                            >
+                              <SelectTrigger className="w-[160px] h-8 border-0 shadow-none bg-transparent hover:bg-muted/50">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {paymentStatusOptions.map((opt) => (
+                                  <SelectItem key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {updatePaymentStatusMutation.isPending &&
+                              updatePaymentStatusMutation.variables?.id === order.id && (
+                                <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                              )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            {formatDate(order.createdAt)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                              >
+                                <span className="sr-only">Ouvrir le menu</span>
+                                <Ellipsis className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  href={`/commandes/${order.id}`}
+                                  className="flex items-center"
+                                >
+                                  <Eye className="mr-2 size-4" />
+                                  Voir les détails
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  href={`/commandes/${order.id}/edit`}
+                                  className="flex items-center"
+                                >
+                                  <Edit className="mr-2 size-4" />
+                                  Modifier le statut
+                                </Link>
+                              </DropdownMenuItem>
+                              {order.status.toLowerCase() !== "shipped" &&
+                                order.status.toLowerCase() !== "delivered" && (
+                                  <DropdownMenuItem>
+                                    <Truck className="mr-2 size-4" />
+                                    Marquer comme expédiée
+                                  </DropdownMenuItem>
+                                )}
+                              {order.status.toLowerCase() === "shipped" && (
+                                <DropdownMenuItem>
+                                  <CheckCircle className="mr-2 size-4" />
+                                  Marquer comme livrée
+                                </DropdownMenuItem>
+                              )}
+                              {order.status.toLowerCase() !== "cancelled" && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem variant="destructive">
+                                    <XCircle className="mr-2 size-4" />
+                                    Annuler la commande
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
             )}
           </div>
 

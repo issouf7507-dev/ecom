@@ -752,7 +752,7 @@ export default function EditNewArrivalProductPage() {
               <CardContent>
                 <div className="grid gap-2">
                   <Select
-                    value={formData.categoryId || "Aucune catégorie"}
+                    value={product.categoryId || "Aucune catégorie"}
                     onValueChange={(value) =>
                       handleSelectChange("categoryId", value)
                     }
