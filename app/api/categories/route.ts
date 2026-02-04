@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { categoryService } from "@/lib/api/categories";
-import { Status } from "@prisma/client";
+import { Status } from "@/lib/constants/status";
 
 export async function GET(request: NextRequest) {
   try {

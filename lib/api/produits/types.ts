@@ -1,4 +1,4 @@
-import { Status } from "@prisma/client";
+import type { Status } from "@/lib/constants/status";
 
 export interface Product {
   id: string;

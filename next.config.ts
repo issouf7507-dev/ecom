@@ -3,12 +3,12 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    domains: [
-      "placehold.co",
-      "dummyjson.com",
-      "cdn.dummyjson.com",
-      "image01.realme.net",
-      "files.edgestore.dev",
+    remotePatterns: [
+      { protocol: "https", hostname: "placehold.co", pathname: "/**" },
+      { protocol: "https", hostname: "dummyjson.com", pathname: "/**" },
+      { protocol: "https", hostname: "cdn.dummyjson.com", pathname: "/**" },
+      { protocol: "https", hostname: "image01.realme.net", pathname: "/**" },
+      { protocol: "https", hostname: "files.edgestore.dev", pathname: "/**" },
     ],
   },
 };

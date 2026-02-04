@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
-import { Status } from "@prisma/client";
+import { Status } from "@/lib/constants/status";
 import type { Product as ApiProduct } from "@/lib/api/produits/types";
 
 // Interface pour les produits transformés pour l'affichage

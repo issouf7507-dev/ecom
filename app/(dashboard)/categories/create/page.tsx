@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCreateCategory, useCategories } from "@/hooks/useCategories";
-import { Status } from "@prisma/client";
+import { Status } from "@/lib/constants/status";
 import { toast } from "sonner";
 
 // Client-only wrapper for Select to prevent hydration errors

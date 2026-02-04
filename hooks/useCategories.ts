@@ -5,7 +5,7 @@ import type {
   UpdateCategoryInput,
   CategoryFilters,
 } from "@/lib/api/categories";
-import { Status } from "@prisma/client";
+import { Status } from "@/lib/constants/status";
 
 const API_BASE = "/api/categories";
 

@@ -10,7 +10,7 @@ import type { Product as ApiProduct } from "@/lib/api/produits/types";
 import type { Product } from "@/types";
 import { Loader2, ChevronLeft, ChevronRight, Check, X } from "lucide-react";
 import { motion } from "framer-motion";
-import { Status } from "@prisma/client";
+import { Status } from "@/lib/constants/status";
 
 // Convertir ApiProduct en Product pour AddToCartButton
 const convertToCartProduct = (apiProduct: ApiProduct): Product => {

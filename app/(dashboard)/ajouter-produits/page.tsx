@@ -36,7 +36,7 @@ import { Separator } from "@/components/ui/separator";
 import { useEdgeStore } from "@/lib/edgestore";
 import { useCreateProduct } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
-import { Status } from "@prisma/client";
+import { Status } from "@/lib/constants/status";
 import { toast } from "sonner";
 
 interface UploadedImage {

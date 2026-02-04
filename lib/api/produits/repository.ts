@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Status } from "@prisma/client";
+import { Status } from "@/lib/constants/status";
 import type { Prisma } from "../../../generated/prisma";
 import type {
   Product,

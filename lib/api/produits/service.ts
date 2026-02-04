@@ -1,6 +1,6 @@
 import { productRepository } from "./repository";
 import { prisma } from "@/lib/prisma";
-import { Status } from "@prisma/client";
+import { Status } from "@/lib/constants/status";
 import type {
   Product,
   CreateProductInput,

@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useProducts } from "@/hooks/useProducts";
-import { Status } from "@prisma/client";
+import { Status } from "@/lib/constants/status";
 import { Loader2 } from "lucide-react";
 import type { Product } from "@/lib/api/produits/types";
 

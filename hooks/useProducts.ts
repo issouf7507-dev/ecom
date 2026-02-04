@@ -5,7 +5,7 @@ import type {
   UpdateProductInput,
   ProductFilters,
 } from "@/lib/api/produits";
-import { Status } from "@prisma/client";
+import { Status } from "@/lib/constants/status";
 
 const API_BASE = "/api/products";
 
