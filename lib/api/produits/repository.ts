@@ -51,8 +51,15 @@ export class ProductRepository {
       }
     }
 
+    // Limite pour éviter de renvoyer des milliers de produits (surcharge CPU/mémoire et abus)
+    const take = Math.min(
+      typeof filters?.take === "number" && filters.take > 0 ? filters.take : 500,
+      1000
+    );
+
     return prisma.product.findMany({
       where,
+      take,
       include: {
         category: {
           select: {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { orderService } from "@/lib/api/orders";
 import type { OrderStatus, PaymentStatus } from "@/lib/api/orders";
+import { requireAdminSession } from "@/lib/auth-api";
 
 const VALID_ORDER_STATUSES: OrderStatus[] = [
   "PENDING",
@@ -23,6 +24,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = await requireAdminSession(request);
+  if (authError) return authError;
   try {
     const { id } = await params;
     const body = await request.json();

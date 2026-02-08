@@ -1,9 +1,14 @@
-@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap");
+/* @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap");
+ */
+/* @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap"); */
+
+@import url("https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&display=swap");
+
 @import "tailwindcss";
 @import "tw-animate-css";
 
 body {
-  font-family: "orbitron", sans-serif;
+  font-family: "Raleway", sans-serif;
   font-optical-sizing: auto;
 
   font-style: normal;
@@ -141,7 +146,7 @@ body {
 }
 
 .orbitron {
-  font-family: "Orbitron", sans-serif;
+  font-family: "Raleway", sans-serif;
   font-optical-sizing: auto;
   font-style: normal;
 }

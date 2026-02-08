@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { orderService } from "@/lib/api/orders";
 import type { OrderFilters, OrderStatus, PaymentStatus } from "@/lib/api/orders";
+import { requireAdminSession } from "@/lib/auth-api";
 
 export async function GET(request: NextRequest) {
+  const authError = await requireAdminSession(request);
+  if (authError) return authError;
   try {
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get("status") as OrderStatus | null;

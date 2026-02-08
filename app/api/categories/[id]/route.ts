@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { categoryService } from "@/lib/api/categories";
+import { requireAdminSession } from "@/lib/auth-api";
 
 export async function GET(
   request: NextRequest,
@@ -30,6 +31,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = await requireAdminSession(request);
+  if (authError) return authError;
   try {
     const body = await request.json();
     const categoryId = (await params).id;
@@ -49,6 +52,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = await requireAdminSession(request);
+  if (authError) return authError;
   try {
     const categoryId = (await params).id;
     await categoryService.deleteCategory(categoryId);

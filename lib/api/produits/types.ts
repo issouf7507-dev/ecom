@@ -143,4 +143,6 @@ export interface ProductFilters {
   isPreOrder?: boolean;
   minPrice?: number;
   maxPrice?: number;
+  /** Max number of products to return (capped at 1000, default 500). */
+  take?: number;
 }

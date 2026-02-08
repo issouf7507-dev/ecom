@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { categoryService } from "@/lib/api/categories";
 import { Status } from "@/lib/constants/status";
+import { rateLimitResponse } from "@/lib/rate-limit";
+import { requireAdminSession } from "@/lib/auth-api";
+
+const GET_RATE = { limit: 120, windowMs: 60 * 1000 };
+const POST_RATE = { limit: 30, windowMs: 60 * 1000 };
 
 export async function GET(request: NextRequest) {
+  const rateLimited = rateLimitResponse(request, GET_RATE);
+  if (rateLimited) return rateLimited;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get("status") as Status | null;
@@ -30,6 +38,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const authError = await requireAdminSession(request);
+  if (authError) return authError;
+  const rateLimited = rateLimitResponse(request, POST_RATE);
+  if (rateLimited) return rateLimited;
+
   try {
     const body = await request.json();
     const category = await categoryService.createCategory(body);

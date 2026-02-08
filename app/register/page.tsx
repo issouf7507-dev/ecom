@@ -41,9 +41,9 @@ export default function RegisterPage() {
 
     if (!formData.password) {
       newErrors.password = "Le mot de passe est requis";
-    } else if (formData.password.length < 6) {
+    } else if (formData.password.length < 8) {
       newErrors.password =
-        "Le mot de passe doit contenir au moins 6 caractères";
+        "Le mot de passe doit contenir au moins 8 caractères";
     }
 
     if (!formData.confirmPassword) {
@@ -75,50 +75,26 @@ export default function RegisterPage() {
     setErrors({});
 
     try {
-      console.log("Attempting signup for:", formData.email);
       const result = await signUp.email({
         email: formData.email,
         password: formData.password,
         name: formData.name,
+        callbackURL: "/",
       });
 
-      console.log("SignUp result:", result);
-
       if (result.error) {
-        console.error("SignUp error:", result.error);
+        const message = result.error.message || "Erreur lors de l'inscription";
         setErrors({
-          email: result.error.message || "Erreur lors de l'inscription",
-          password: result.error.message || "Erreur lors de l'inscription",
+          email: message,
+          password: message,
         });
-        toast.error(result.error.message || "Erreur lors de l'inscription");
-      } else {
-        // SignUp successful
-        console.log("SignUp success:", result.data);
-        toast.success("Compte créé avec succès !");
-
-        // Auto-login after signup
-        // try {
-        //   const loginResult = await signIn.email({
-        //     email: formData.email,
-        //     password: formData.password,
-        //   });
-
-        //   if (loginResult.error) {
-        //     console.error("Auto-login error:", loginResult.error);
-        //     toast.warning("Compte créé ! Veuillez vous connecter.");
-        //     router.push("/login");
-        //   } else {
-        //     console.log("Auto-login success:", loginResult.data);
-        //     toast.success("Connexion réussie !");
-        //     router.push("/");
-        //     router.refresh();
-        //   }
-        // } catch (loginError) {
-        //   console.error("Auto-login exception:", loginError);
-        //   toast.warning("Compte créé ! Veuillez vous connecter.");
-        //   router.push("/login");
-        // }
+        toast.error(message);
+        return;
       }
+
+      toast.success("Compte créé avec succès !");
+      router.push("/");
+      router.refresh();
     } catch (error) {
       console.error("Auth error:", error);
       toast.error("Une erreur est survenue. Veuillez réessayer.");
@@ -205,9 +181,8 @@ export default function RegisterPage() {
                   placeholder="John Doe"
                   value={formData.name}
                   onChange={handleChange}
-                  className={`w-full pl-10 ${
-                    errors.name ? "border-red-500" : ""
-                  }`}
+                  className={`w-full pl-10 ${errors.name ? "border-red-500" : ""
+                    }`}
                 />
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                   <User className="size-4" />
@@ -234,9 +209,8 @@ export default function RegisterPage() {
                   placeholder="votre@email.com"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full pl-10 ${
-                    errors.email ? "border-red-500" : ""
-                  }`}
+                  className={`w-full pl-10 ${errors.email ? "border-red-500" : ""
+                    }`}
                 />
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                   <Mail className="size-4" />
@@ -263,9 +237,8 @@ export default function RegisterPage() {
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-10 ${
-                    errors.password ? "border-red-500" : ""
-                  }`}
+                  className={`w-full pl-10 pr-10 ${errors.password ? "border-red-500" : ""
+                    }`}
                 />
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                   <Lock className="size-4" />
@@ -303,9 +276,8 @@ export default function RegisterPage() {
                   placeholder="••••••••"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`w-full pl-10 ${
-                    errors.confirmPassword ? "border-red-500" : ""
-                  }`}
+                  className={`w-full pl-10 ${errors.confirmPassword ? "border-red-500" : ""
+                    }`}
                 />
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                   <Lock className="size-4" />

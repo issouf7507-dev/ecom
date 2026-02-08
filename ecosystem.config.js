@@ -26,6 +26,8 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: "1G",
+      // Limite la mémoire Node pour éviter que le process grossisse sans fin
+      node_args: "--max-old-space-size=896",
       env: {
         NODE_ENV: "production",
       },
@@ -33,8 +35,8 @@ module.exports = {
         NODE_ENV: "production",
       },
       // Optionnel: décommenter et créer le dossier "logs" pour des fichiers de log dédiés
-      // error_file: "./logs/pm2-error.log",
-      // out_file: "./logs/pm2-out.log",
+      error_file: "./logs/pm2-error.log",
+      out_file: "./logs/pm2-out.log",
       merge_logs: true,
       time: true,
     },

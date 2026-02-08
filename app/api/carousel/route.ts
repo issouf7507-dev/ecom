@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdminSession } from "@/lib/auth-api";
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,6 +25,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const authError = await requireAdminSession(request);
+  if (authError) return authError;
   try {
     const body = await request.json();
     const { title, description, image, alt, link, linkText, sortOrder, isActive } = body;

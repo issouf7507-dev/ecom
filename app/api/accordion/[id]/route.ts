@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdminSession } from "@/lib/auth-api";
 
 export async function GET(
   request: NextRequest,
@@ -32,6 +33,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = await requireAdminSession(request);
+  if (authError) return authError;
   try {
     const { id } = await params;
     const body = await request.json();
@@ -64,6 +67,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = await requireAdminSession(request);
+  if (authError) return authError;
   try {
     const { id } = await params;
     await prisma.accordionItem.delete({
