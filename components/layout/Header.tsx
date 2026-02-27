@@ -99,6 +99,11 @@ export function Header() {
       name: "Accessoires",
       href: "/accessories",
     },
+    {
+      id: "salon-beaute",
+      name: "Salon de beauté",
+      href: "/salon-de-beaute",
+    },
   ];
 
   const utilityLinks = [

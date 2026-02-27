@@ -100,6 +100,11 @@ const data = {
       icon: IconPhoto,
     },
     {
+      title: "Salon de beauté",
+      url: "/catalogue",
+      icon: IconBuildingStore,
+    },
+    {
       title: "Analytics",
       url: "/analytics",
       icon: IconChartBar,
