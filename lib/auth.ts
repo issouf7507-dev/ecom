@@ -6,7 +6,7 @@ export const auth = betterAuth({
   baseURL:
     process.env.BETTER_AUTH_URL ||
     process.env.NEXT_PUBLIC_BETTER_AUTH_URL ||
-    "http://localhost:3000",
+    "https://willy.ci-cargo.com",
   basePath: "/api/auth",
   secret: process.env.BETTER_AUTH_SECRET,
   database: prismaAdapter(prisma, {

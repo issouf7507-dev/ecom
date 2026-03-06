@@ -6,7 +6,7 @@ CREATE TABLE `users` (
     `emailVerified` DATETIME(3) NULL,
     `image` VARCHAR(191) NULL,
     `password` VARCHAR(191) NULL,
-    `role` ENUM('CUSTOMER', 'ADMIN', 'MANAGER', 'STAFF') NOT NULL DEFAULT 'CUSTOMER',
+    `role` ENUM('CUSTOMER', 'ADMIN', 'MANAGER', 'STAFF') NOT NULL DEFAULT 'ADMIN',
     `phone` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
@@ -45,6 +45,10 @@ CREATE TABLE `accounts` (
     `password` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
+    `idToken` TEXT NULL,
+    `accessTokenExpiresAt` DATETIME(3) NULL,
+    `refreshTokenExpiresAt` DATETIME(3) NULL,
+    `scope` TEXT NULL,
 
     INDEX `accounts_userId_idx`(`userId`),
     UNIQUE INDEX `accounts_providerId_accountId_key`(`providerId`, `accountId`),
@@ -61,6 +65,7 @@ CREATE TABLE `verifications` (
     `updatedAt` DATETIME(3) NOT NULL,
 
     INDEX `verifications_value_idx`(`value`),
+    INDEX `verifications_identifier_idx`(`identifier`(191)),
     UNIQUE INDEX `verifications_identifier_value_key`(`identifier`, `value`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -72,7 +77,6 @@ CREATE TABLE `categories` (
     `slug` VARCHAR(191) NOT NULL,
     `description` TEXT NULL,
     `image` VARCHAR(191) NULL,
-    `parentId` VARCHAR(191) NULL,
     `status` ENUM('ACTIVE', 'INACTIVE', 'ARCHIVED', 'DRAFT') NOT NULL DEFAULT 'ACTIVE',
     `sortOrder` INTEGER NOT NULL DEFAULT 0,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -91,7 +95,6 @@ CREATE TABLE `products` (
     `slug` VARCHAR(191) NOT NULL,
     `description` TEXT NULL,
     `shortDescription` TEXT NULL,
-    `sku` VARCHAR(191) NOT NULL,
     `barcode` VARCHAR(191) NULL,
     `price` DOUBLE NOT NULL,
     `compareAtPrice` DOUBLE NULL,
@@ -122,9 +125,7 @@ CREATE TABLE `products` (
     `categoryId` VARCHAR(191) NULL,
 
     UNIQUE INDEX `products_slug_key`(`slug`),
-    UNIQUE INDEX `products_sku_key`(`sku`),
     INDEX `products_slug_idx`(`slug`),
-    INDEX `products_sku_idx`(`sku`),
     INDEX `products_status_idx`(`status`),
     INDEX `products_categoryId_idx`(`categoryId`),
     INDEX `products_isNewArrival_idx`(`isNewArrival`),
@@ -177,7 +178,8 @@ CREATE TABLE `orders` (
     `shipping` DOUBLE NOT NULL DEFAULT 0,
     `discount` DOUBLE NOT NULL DEFAULT 0,
     `total` DOUBLE NOT NULL,
-    `currency` VARCHAR(191) NOT NULL DEFAULT 'GBP',
+    `whatsappNumber` VARCHAR(191) NULL,
+    `currency` VARCHAR(191) NOT NULL DEFAULT 'FCFA',
     `notes` TEXT NULL,
     `trackingNumber` VARCHAR(191) NULL,
     `shippedAt` DATETIME(3) NULL,
@@ -221,7 +223,7 @@ CREATE TABLE `payments` (
     `id` VARCHAR(191) NOT NULL,
     `orderId` VARCHAR(191) NOT NULL,
     `amount` DOUBLE NOT NULL,
-    `currency` VARCHAR(191) NOT NULL DEFAULT 'GBP',
+    `currency` VARCHAR(191) NOT NULL DEFAULT 'FCFA',
     `method` VARCHAR(191) NOT NULL,
     `status` ENUM('PENDING', 'PAID', 'FAILED', 'REFUNDED', 'PARTIALLY_REFUNDED') NOT NULL DEFAULT 'PENDING',
     `transactionId` VARCHAR(191) NULL,
@@ -424,6 +426,72 @@ CREATE TABLE `store_settings` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `carousel_slides` (
+    `id` VARCHAR(191) NOT NULL,
+    `title` VARCHAR(191) NOT NULL,
+    `description` VARCHAR(191) NULL,
+    `image` VARCHAR(191) NOT NULL,
+    `alt` VARCHAR(191) NULL,
+    `link` VARCHAR(191) NULL,
+    `linkText` VARCHAR(191) NULL,
+    `sortOrder` INTEGER NOT NULL DEFAULT 0,
+    `isActive` BOOLEAN NOT NULL DEFAULT true,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    INDEX `carousel_slides_sortOrder_idx`(`sortOrder`),
+    INDEX `carousel_slides_isActive_idx`(`isActive`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `accordion_items` (
+    `id` VARCHAR(191) NOT NULL,
+    `title` VARCHAR(191) NOT NULL,
+    `image` VARCHAR(191) NOT NULL,
+    `alt` VARCHAR(191) NULL,
+    `link` VARCHAR(191) NULL,
+    `linkText` VARCHAR(191) NULL,
+    `sortOrder` INTEGER NOT NULL DEFAULT 0,
+    `isActive` BOOLEAN NOT NULL DEFAULT true,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    INDEX `accordion_items_sortOrder_idx`(`sortOrder`),
+    INDEX `accordion_items_isActive_idx`(`isActive`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `salon_catalogues` (
+    `id` VARCHAR(191) NOT NULL,
+    `slug` VARCHAR(191) NOT NULL,
+    `title` VARCHAR(191) NOT NULL,
+    `shortDescription` VARCHAR(191) NOT NULL,
+    `coverImage` VARCHAR(191) NOT NULL,
+    `sortOrder` INTEGER NOT NULL DEFAULT 0,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `salon_catalogues_slug_key`(`slug`),
+    INDEX `salon_catalogues_sortOrder_idx`(`sortOrder`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `salon_catalogue_images` (
+    `id` VARCHAR(191) NOT NULL,
+    `catalogueId` VARCHAR(191) NOT NULL,
+    `url` VARCHAR(191) NOT NULL,
+    `sortOrder` INTEGER NOT NULL DEFAULT 0,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `salon_catalogue_images_catalogueId_idx`(`catalogueId`),
+    INDEX `salon_catalogue_images_sortOrder_idx`(`sortOrder`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `_CouponUsedBy` (
     `A` VARCHAR(191) NOT NULL,
     `B` VARCHAR(191) NOT NULL,
@@ -437,9 +505,6 @@ ALTER TABLE `sessions` ADD CONSTRAINT `sessions_userId_fkey` FOREIGN KEY (`userI
 
 -- AddForeignKey
 ALTER TABLE `accounts` ADD CONSTRAINT `accounts_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `categories` ADD CONSTRAINT `categories_parentId_fkey` FOREIGN KEY (`parentId`) REFERENCES `categories`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `products` ADD CONSTRAINT `products_categoryId_fkey` FOREIGN KEY (`categoryId`) REFERENCES `categories`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
@@ -512,6 +577,9 @@ ALTER TABLE `campaign_products` ADD CONSTRAINT `campaign_products_productId_fkey
 
 -- AddForeignKey
 ALTER TABLE `inventory` ADD CONSTRAINT `inventory_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `products`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `salon_catalogue_images` ADD CONSTRAINT `salon_catalogue_images_catalogueId_fkey` FOREIGN KEY (`catalogueId`) REFERENCES `salon_catalogues`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `_CouponUsedBy` ADD CONSTRAINT `_CouponUsedBy_A_fkey` FOREIGN KEY (`A`) REFERENCES `coupons`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

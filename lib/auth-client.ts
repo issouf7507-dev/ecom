@@ -6,7 +6,7 @@ function getAuthBaseURL() {
   if (process.env.NEXT_PUBLIC_BETTER_AUTH_URL)
     return process.env.NEXT_PUBLIC_BETTER_AUTH_URL;
   if (typeof window !== "undefined") return window.location.origin;
-  return "http://localhost:3000";
+  return "https://willy.ci-cargo.com";
 }
 
 export const authClient = createAuthClient({
